@@ -145,7 +145,6 @@ class GA():
         fitness = self.fitness(acc, params)
         print(fitness)
 
-
         new_population = population
         for generation in range(self.generations):
             utils.print_and_log(logger, "-----" + str(generation + 1) + " generation------")
@@ -218,7 +217,7 @@ class GA():
             offspring_fitness = [offspring_fitness[i] for i in offspring_rank]
             # idx_offspring = [idx_offspring[i] for i in offspring_rank]
 
-            elite_rate = 0.5
+            elite_rate = 0.2
             # print("upper 80% = ", int(self.pop_size * elite_rate))
             parents_population = parents_population[:int(self.pop_size * elite_rate) * self.number_blocks]
             parents_fitness = parents_fitness[:int(self.pop_size * elite_rate)]
@@ -231,7 +230,9 @@ class GA():
             new_population = parents_population + offspring_population  # np.concatenate((parents_population, offspring_population), axis=0)
             fitness = parents_fitness + offspring_fitness
             idx = idx_parents + idx_offspring
-
+            rank = np.argsort(fitness)[::-1]
+            fitness = fitness[rank]
+            utils.print_and_log(logger, "Fitness values = {}".format(fitness))
             utils.print_and_log(logger, "Best Fitness value = {}".format(fitness[0]))
 
         rank = np.argsort(fitness)[::-1]

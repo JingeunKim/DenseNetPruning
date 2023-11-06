@@ -12,9 +12,9 @@ mutation_rate = 0.1
 generation = 10
 number_population = 20
 num_workers = 4
+
 growthRate = 12
 depth = 100
-
 reduction = 0.5
 bottleneck = True
 nClasses = 10
@@ -36,4 +36,5 @@ def print_and_log(logger, msg):
     # global logger
     print(msg)
     logger.info(msg)
+
 logger = setup_logger()
