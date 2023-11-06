@@ -230,8 +230,10 @@ class GA():
             new_population = parents_population + offspring_population  # np.concatenate((parents_population, offspring_population), axis=0)
             fitness = parents_fitness + offspring_fitness
             idx = idx_parents + idx_offspring
+
             rank = np.argsort(fitness)[::-1]
-            fitness = fitness[rank]
+            fitness = [fitness[i] for i in rank]
+
             utils.print_and_log(logger, "Fitness values = {}".format(fitness))
             utils.print_and_log(logger, "Best Fitness value = {}".format(fitness[0]))
 
