@@ -91,6 +91,9 @@ class DenseBlock(nn.Module):
                         x_list.append(x)
                     else:
                         x_list.append(globals()["out{}".format(q - 1)])
+                if x_list is None:
+                    print(x_list)
+                    print(self.idx[i])
                 globals()["x{}".format(i - 1)] = torch.cat(x_list, 1)
                 globals()["out{}".format(i - 1)] = self.dense[(i - 1) * 4:i * 4](globals()["x{}".format(i - 1)])
                 globals()["x{}".format(i)] = torch.cat(

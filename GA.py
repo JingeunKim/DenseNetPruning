@@ -31,8 +31,8 @@ class GA():
         return population
 
     def create_matrix(self, nb_layers):
-        nb_layers = nb_layers + 1
-        # 2차원 배열 초기화
+        nb_layers = nb_layers + 2
+        # 2 차원 배열 초기화
         matrix = [[0 for _ in range(nb_layers)] for _ in range(nb_layers)]
 
         # 대각선 위 요소를 1로 채우기
@@ -139,6 +139,8 @@ class GA():
                                  matrix=population[(i - 1) * self.number_blocks:i * self.number_blocks],
                                  idx=idx[(i - 1) * self.number_blocks:i * self.number_blocks]).to(
                 device=utils.device)
+            # d = torch.empty(64,3,32,32, dtype=torch.float32).to(utils.device)
+            # torch.onnx.export(net, d, 'test.onnx')
             net = train(net, trainloader, utils.GA_epoch, utils.device)
             accuracy = test(net, testloader, utils.device)
             acc.append(accuracy)
