@@ -16,8 +16,11 @@ def test(model, testloader, device):
 
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
-            correct += (predicted == labels).float().sum().item()
-            error_rate = 100 * correct // total
+            # correct += (predicted == labels).float().sum().item()
+            correct += predicted.eq(labels).sum().item()
+
+            error_rate = 100. * correct / total
+
             # error_rate = 100 - acc
     print('Accuracy of the network on the 10000 test images: {}'.format(error_rate))
     # all_loss.append(error_rate)
