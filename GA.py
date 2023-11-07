@@ -21,7 +21,7 @@ class GA():
         self.number_blocks = 3
 
         utils.print_and_log(logger,
-                            "GA start generation : " + str(self.generations) + " population : " + str(self.pop_size))
+                            "GA start generation : " + str(self.generations) + " population : " + str(self.pop_size) + " prob : " + str(utils.prob))
 
     def create_init_pop(self, nb_layers):
         population = []
@@ -42,7 +42,11 @@ class GA():
         # 대각선 위 요소 이외의 요소를 랜덤하게 0 또는 1로 채우기
         for i in range(nb_layers):
             for j in range(i + 2, nb_layers):
-                matrix[i][j] = random.choice([0, 1])
+                prob = random.random()
+                if prob <= utils.prob:
+                    matrix[i][j] = 1
+                else:
+                    matrix[i][j] = 0
         # for row in matrix:
         #     print(row)
         # print()

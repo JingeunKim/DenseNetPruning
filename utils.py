@@ -11,6 +11,8 @@ crossover_rate = 1
 mutation_rate = 0.1
 generation = 10
 number_population = 20
+prob = 0.7
+
 num_workers = 4
 
 growthRate = 12
