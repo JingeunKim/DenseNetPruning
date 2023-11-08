@@ -26,7 +26,7 @@ class GA():
     def create_init_pop(self, nb_layers):
         population = []
         for p in range(self.pop_size):
-            for p in range(self.number_blocks):
+            for q in range(self.number_blocks):
                 population.append(self.create_matrix(nb_layers))
         return population
 
@@ -54,12 +54,17 @@ class GA():
 
     def chk(self, nb_layers, matrix):
         idx = []
-        for j in range(nb_layers):
+        print("chk")
+        for j in range(nb_layers+2):
             z = [i[j] for i in matrix]
+            print("z")
+            print(z)
             find_one = []
             for a in range(len(z)):
                 if z[a] == 1:
                     find_one.append(a)
+            print("find_one")
+            print(find_one)
             idx.append(find_one)
         return idx
 
@@ -75,16 +80,32 @@ class GA():
         return parents, selected_number
 
     def crossover(self, p1, p2, new_population, nDenseBlocks):
+        print("p1, p2 = ", p1, p2)
+        print("new pop ")
+        for row in new_population:
+            print(row)
         # one-point crossover
         parent1 = np.array(new_population[p1 * self.number_blocks:(p1 + 1) * self.number_blocks])
         parent2 = np.array(new_population[p2 * self.number_blocks:(p2 + 1) * self.number_blocks])
 
-        point = random.randint(1, nDenseBlocks)
-
+        point = random.randint(1, nDenseBlocks+2)
+        print("point = ", point)
+        print("nDenseBlocks = ", nDenseBlocks+2)
+        print("parent1")
+        print(parent1)
+        print("parent2")
+        print(parent2)
+        print("-")
         offspring1 = np.concatenate((parent1[:, :point], parent2[:, point:]),
                                     axis=1)
         offspring2 = np.concatenate((parent2[:, :point], parent1[:, point:]),
                                     axis=1)
+
+        print("offspring1")
+        print(offspring1)
+        print("offspring2")
+        print(offspring2)
+        print("-")
 
         offspring1 = offspring1.tolist()
         offspring2 = offspring2.tolist()
@@ -96,9 +117,9 @@ class GA():
         off1 = np.array(offspring1)
         off2 = np.array(offspring2)
 
-        row_index = random.randint(0, nDenseBlocks - 3)
+        row_index = random.randint(0, nDenseBlocks + 1)
 
-        col_index = random.randint(row_index + 1, row_index + 2)
+        col_index = random.randint(row_index + 1, nDenseBlocks + 1)
 
         for i in range(self.number_blocks):
             if off1[i][row_index][col_index] == 0:
@@ -126,10 +147,12 @@ class GA():
         # initialization
 
         population = self.create_init_pop(nDenseBlocks)
-        # print(population)
+        for row in population:
+            print(row)
         idx = []
         for p in range(self.pop_size * 3):
             idx.append(self.chk(nDenseBlocks, population[p]))
+        print("idx = ", idx)
         trainloader, testloader, classes = dataloader.dataloader()
         acc = []
         params = []
@@ -160,16 +183,20 @@ class GA():
                 offspring2 = []
                 parents, selected_number = self.selection(selected_number)
                 crossover_rand = random.random()
-
                 if crossover_rand <= utils.crossover_rate:
                     offspring1, offspring2 = self.crossover(parents[0], parents[1], new_population, nDenseBlocks)
                     mutate_rand = random.random()
                     if mutate_rand <= utils.mutation_rate:
                         offspring1, offspring2 = self.mutation(offspring1, offspring2, nDenseBlocks)
+
                 new_population.extend(offspring1)
                 new_population.extend(offspring2)
             for p in range(self.pop_size + 1, len(new_population)):
+                print("new pop", p)
+                for row in new_population[p]:
+                    print(row)
                 idx.append(self.chk(nDenseBlocks, new_population[p]))
+            print("idx = ", idx)
             # for row in new_population:
             #     print(row)
             # print()
@@ -223,7 +250,7 @@ class GA():
             offspring_fitness = [offspring_fitness[i] for i in offspring_rank]
             # idx_offspring = [idx_offspring[i] for i in offspring_rank]
 
-            elite_rate = 0.2
+            elite_rate = utils.elitism
             # print("upper 80% = ", int(self.pop_size * elite_rate))
             parents_population = parents_population[:int(self.pop_size * elite_rate) * self.number_blocks]
             parents_fitness = parents_fitness[:int(self.pop_size * elite_rate)]
