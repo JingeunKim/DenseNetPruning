@@ -1,19 +1,21 @@
 import logging
 import datetime
-
-lr = 1e-1
-weight_decay = 1e-4
-momentum = 0.9
-epochs = 300
-GA_epoch = 1
 device = 'cuda'
+
+GA_epoch = 1
 crossover_rate = 1
 mutation_rate = 0.1
 generation = 10
 number_population = 20
-prob = 0.7
+prob = 0.5
+crossover = 'row-col'
+elitism = 0.2
 
 num_workers = 4
+lr = 1e-1
+weight_decay = 1e-4
+momentum = 0.9
+epochs = 300
 
 growthRate = 12
 depth = 100

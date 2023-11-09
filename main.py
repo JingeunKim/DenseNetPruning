@@ -27,3 +27,4 @@ model = train(model, trainloader, utils.epochs, utils.device)
 acc = test(model, testloader, utils.device)
 utils.print_and_log(logger, "Best model accuracy =  {}%".format(acc))
 utils.print_and_log(logger, "END")
+

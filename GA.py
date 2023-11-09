@@ -21,7 +21,7 @@ class GA():
         self.number_blocks = 3
 
         utils.print_and_log(logger,
-                            "GA start generation : " + str(self.generations) + " population : " + str(self.pop_size) + " prob : " + str(utils.prob))
+                            "GA start generation : " + str(self.generations) + " population : " + str(self.pop_size) + " prob : " + str(utils.prob) + "crossover : " + str(utils.crossover))
 
     def create_init_pop(self, nb_layers):
         population = []
@@ -54,17 +54,17 @@ class GA():
 
     def chk(self, nb_layers, matrix):
         idx = []
-        print("chk")
+        # print("chk")
         for j in range(nb_layers+2):
             z = [i[j] for i in matrix]
-            print("z")
-            print(z)
+            # print("z")
+            # print(z)
             find_one = []
             for a in range(len(z)):
                 if z[a] == 1:
                     find_one.append(a)
-            print("find_one")
-            print(find_one)
+            # print("find_one")
+            # print(find_one)
             idx.append(find_one)
         return idx
 
@@ -80,35 +80,39 @@ class GA():
         return parents, selected_number
 
     def crossover(self, p1, p2, new_population, nDenseBlocks):
-        print("p1, p2 = ", p1, p2)
-        print("new pop ")
-        for row in new_population:
-            print(row)
-        # one-point crossover
-        parent1 = np.array(new_population[p1 * self.number_blocks:(p1 + 1) * self.number_blocks])
-        parent2 = np.array(new_population[p2 * self.number_blocks:(p2 + 1) * self.number_blocks])
+        if utils.crossover == 'one-point':
+            # one-point crossover
+            parent1 = np.array(new_population[p1 * self.number_blocks:(p1 + 1) * self.number_blocks])
+            parent2 = np.array(new_population[p2 * self.number_blocks:(p2 + 1) * self.number_blocks])
 
-        point = random.randint(1, nDenseBlocks+2)
-        print("point = ", point)
-        print("nDenseBlocks = ", nDenseBlocks+2)
-        print("parent1")
-        print(parent1)
-        print("parent2")
-        print(parent2)
-        print("-")
-        offspring1 = np.concatenate((parent1[:, :point], parent2[:, point:]),
-                                    axis=1)
-        offspring2 = np.concatenate((parent2[:, :point], parent1[:, point:]),
-                                    axis=1)
+            point = random.randint(1, nDenseBlocks + 2)
 
-        print("offspring1")
-        print(offspring1)
-        print("offspring2")
-        print(offspring2)
-        print("-")
+            offspring1 = np.concatenate((parent1[:, :point], parent2[:, point:]),
+                                        axis=1)
+            offspring2 = np.concatenate((parent2[:, :point], parent1[:, point:]),
+                                        axis=1)
+            offspring1 = offspring1.tolist()
+            offspring2 = offspring2.tolist()
+        elif utils.crossover == 'row-col':
+            parent1 = np.array(new_population[p1 * self.number_blocks:(p1 + 1) * self.number_blocks])
+            parent2 = np.array(new_population[p2 * self.number_blocks:(p2 + 1) * self.number_blocks])
 
-        offspring1 = offspring1.tolist()
-        offspring2 = offspring2.tolist()
+            row_point = random.randint(1, nDenseBlocks + 1)
+            col_point = random.randint(1, nDenseBlocks + 1)
+
+            offspring1_part = np.concatenate((parent1[:, :row_point, :col_point], parent2[:, :row_point, col_point:]),
+                                             axis=2)
+            offpsring1_part2 = np.concatenate((parent2[:, row_point:, :col_point], parent1[:, row_point:, col_point:]),
+                                              axis=2)
+
+            offspring1 = np.concatenate((offspring1_part, offpsring1_part2), axis=1)
+
+            offspring2_part = np.concatenate((parent2[:, :row_point, :col_point], parent1[:, :row_point, col_point:]),
+                                             axis=2)
+            offpsring2_part2 = np.concatenate((parent1[:, row_point:, :col_point], parent2[:, row_point:, col_point:]),
+                                              axis=2)
+
+            offspring2 = np.concatenate((offspring2_part, offpsring2_part2), axis=1)
 
         return offspring1, offspring2
 
@@ -117,9 +121,9 @@ class GA():
         off1 = np.array(offspring1)
         off2 = np.array(offspring2)
 
-        row_index = random.randint(0, nDenseBlocks + 1)
+        row_index = random.randint(0, nDenseBlocks)
 
-        col_index = random.randint(row_index + 1, nDenseBlocks + 1)
+        col_index = random.randint(row_index+1, nDenseBlocks + 1)
 
         for i in range(self.number_blocks):
             if off1[i][row_index][col_index] == 0:
@@ -147,12 +151,12 @@ class GA():
         # initialization
 
         population = self.create_init_pop(nDenseBlocks)
-        for row in population:
-            print(row)
+        # for row in population:
+        #     print(row)
         idx = []
         for p in range(self.pop_size * 3):
             idx.append(self.chk(nDenseBlocks, population[p]))
-        print("idx = ", idx)
+        # print("idx = ", idx)
         trainloader, testloader, classes = dataloader.dataloader()
         acc = []
         params = []
@@ -167,12 +171,12 @@ class GA():
             net = train(net, trainloader, utils.GA_epoch, utils.device)
             accuracy = test(net, testloader, utils.device)
             acc.append(accuracy)
-            params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
+            # params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
 
         print("acc = ", acc)
-        print("params = ", params)
-        fitness = self.fitness(acc, params)
-        print(fitness)
+        # print("params = ", params)
+        fitness = acc#self.fitness(acc, params)
+        # print(fitness)
 
         new_population = population
         for generation in range(self.generations):
@@ -192,14 +196,9 @@ class GA():
                 new_population.extend(offspring1)
                 new_population.extend(offspring2)
             for p in range(self.pop_size + 1, len(new_population)):
-                print("new pop", p)
-                for row in new_population[p]:
-                    print(row)
                 idx.append(self.chk(nDenseBlocks, new_population[p]))
-            print("idx = ", idx)
-            # for row in new_population:
-            #     print(row)
-            # print()
+            # print("idx = ", idx)
+
             for m in range(self.pop_size, self.pop_size * 2):
                 net = model.DenseNet(growthRate=12, depth=100, reduction=0.5, bottleneck=True, nClasses=10,
                                      matrix=new_population[(m - 1) * self.number_blocks:m * self.number_blocks],
@@ -208,20 +207,20 @@ class GA():
                 net = train(net, trainloader, utils.GA_epoch, utils.device)
                 accuracy = test(net, testloader, utils.device)
                 acc.append(accuracy)
-                params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
+                # params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
                 # print(accuracy)
 
-            print("params : {}".format(params))
-            fitness = self.fitness(acc, params)
-            print("fitness : {}".format(fitness))
+            # print("params : {}".format(params))
+            fitness = acc#self.fitness(acc, params)
+            # print("fitness : {}".format(fitness))
 
             rank = np.argsort(fitness)[::-1]
             acc = np.array(acc)[rank]
-            params = np.array(params)[rank]
+            # params = np.array(params)[rank]
             acc = acc[:self.pop_size]
-            params = params[:self.pop_size]
+            # params = params[:self.pop_size]
             acc = acc.tolist()
-            params = params.tolist()
+            # params = params.tolist()
 
             parents_population = new_population[:self.pop_size * self.number_blocks]
             parents_fitness = fitness[:self.pop_size]
@@ -238,7 +237,7 @@ class GA():
                 parents_population_rank.extend(parents_population[(i - 1) * self.number_blocks:i * self.number_blocks])
                 idx_parents_rank.extend(idx_parents[(i - 1) * self.number_blocks:i * self.number_blocks])
             parents_fitness = [parents_fitness[i] for i in parent_rank]
-            # idx_parents = [idx_parents[i] for i in parent_rank]
+
 
             offspring_rank = np.argsort(offspring_fitness)[::-1]
             offspring_population_rank = []
@@ -248,10 +247,9 @@ class GA():
                     offspring_population[(i - 1) * self.number_blocks:i * self.number_blocks])
                 idx_offspring_rank.extend(idx_offspring[(i - 1) * self.number_blocks:i * self.number_blocks])
             offspring_fitness = [offspring_fitness[i] for i in offspring_rank]
-            # idx_offspring = [idx_offspring[i] for i in offspring_rank]
+
 
             elite_rate = utils.elitism
-            # print("upper 80% = ", int(self.pop_size * elite_rate))
             parents_population = parents_population[:int(self.pop_size * elite_rate) * self.number_blocks]
             parents_fitness = parents_fitness[:int(self.pop_size * elite_rate)]
             idx_parents = idx_parents[:int(self.pop_size * elite_rate) * self.number_blocks]

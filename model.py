@@ -55,17 +55,17 @@ class DenseBlock(nn.Module):
         self.matrix = matrix
         self.idx = idx
         self.nDenseBlocks = nDenseBlocks
-        print(len(idx), nDenseBlocks)
+
         for i in range(1, nDenseBlocks+2):
             self.nChannels_copy = self.nChannels
             full_list = list(range(0, i))
             # 컬럼 돌며 0 숫자 카운트 (concat된 x 중 chunk하여 delete하기 위함)
             missing_numbers = [num for num in full_list if num not in self.idx[i]]
-            print("self.idx[i]")
-            print(self.idx[i])
-            if len(self.idx[i]) == 0:
-                print("0 self.idx[i]")
-                print(self.idx[i])
+            # print("self.idx[i]")
+            # print(self.idx[i])
+            # if len(self.idx[i]) == 0:
+            #     print("0 self.idx[i]")
+            #     print(self.idx[i])
             if i > 1:
                 for a in missing_numbers:
                     if a == 0:
@@ -97,9 +97,9 @@ class DenseBlock(nn.Module):
                         x_list.append(x)
                     else:
                         x_list.append(globals()["out{}".format(q - 1)])
-                if len(x_list) == 0:
-                    print(x_list)
-                    print(self.idx[i])
+                # if len(x_list) == 0:
+                #     print(x_list)
+                #     print(self.idx[i])
                 globals()["x{}".format(i - 1)] = torch.cat(x_list, 1)
                 globals()["out{}".format(i - 1)] = self.dense[(i - 1) * 4:i * 4](globals()["x{}".format(i - 1)])
                 globals()["x{}".format(i)] = torch.cat(
