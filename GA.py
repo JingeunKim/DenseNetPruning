@@ -21,7 +21,7 @@ class GA():
         self.number_blocks = 3
 
         utils.print_and_log(logger,
-                            "GA start generation : " + str(self.generations) + " population : " + str(self.pop_size) + " prob : " + str(utils.prob) + "crossover : " + str(utils.crossover))
+                            "GA start generation : " + str(self.generations) + " population : " + str(self.pop_size) + " prob : " + str(utils.prob) + " crossover : " + str(utils.crossover))
 
     def create_init_pop(self, nb_layers):
         population = []
@@ -166,8 +166,10 @@ class GA():
                                  matrix=population[(i - 1) * self.number_blocks:i * self.number_blocks],
                                  idx=idx[(i - 1) * self.number_blocks:i * self.number_blocks]).to(
                 device=utils.device)
+
             # d = torch.empty(64,3,32,32, dtype=torch.float32).to(utils.device)
             # torch.onnx.export(net, d, 'test.onnx')
+
             net = train(net, trainloader, utils.GA_epoch, utils.device)
             accuracy = test(net, testloader, utils.device)
             acc.append(accuracy)
