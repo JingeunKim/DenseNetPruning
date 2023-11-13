@@ -172,12 +172,12 @@ class GA():
             net = train(net, trainloader, utils.GA_epoch, utils.device)
             accuracy = test(net, testloader, utils.device)
             acc.append(accuracy)
-            # params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
+            params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
 
         print("acc = ", acc)
-        # print("params = ", params)
-        fitness = acc#self.fitness(acc, params)
-        # print(fitness)
+        print("params = ", params)
+        fitness = self.fitness(acc, params)
+        print(fitness)
 
         new_population = population
         for generation in range(self.generations):
@@ -208,12 +208,12 @@ class GA():
                 net = train(net, trainloader, utils.GA_epoch, utils.device)
                 accuracy = test(net, testloader, utils.device)
                 acc.append(accuracy)
-                # params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
-                # print(accuracy)
+                params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
+                print(accuracy)
 
-            # print("params : {}".format(params))
-            fitness = acc#self.fitness(acc, params)
-            # print("fitness : {}".format(fitness))
+            print("params : {}".format(params))
+            fitness = self.fitness(acc, params)
+            print("fitness : {}".format(fitness))
 
             rank = np.argsort(fitness)[::-1]
             acc = np.array(acc)[rank]
