@@ -18,7 +18,7 @@ GA(nDenseBlock=100, Bottleneck=True).evolve()
 end = time.time()
 utils.print_and_log(logger, "GA TIME : {}".format(end-start))
 
-model = torch.load('./models/model{:%Y%m%d}.pt'.format(datetime.datetime.now()))
+model = torch.load('./models/model{:%Y%m%d}_{}.pt'.format(datetime.datetime.now(), utils.prob))
 num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 utils.print_and_log(logger, "train & test")
 utils.print_and_log(logger, "Best model # params =  {}".format(num_params))

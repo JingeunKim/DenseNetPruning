@@ -16,6 +16,8 @@ import sys
 import math
 import random
 
+import utils
+
 "https://github.com/bamos/densenet.pytorch/blob/master/densenet.py"
 
 
@@ -61,21 +63,23 @@ class DenseBlock(nn.Module):
             full_list = list(range(0, i))
             # 컬럼 돌며 0 숫자 카운트 (concat된 x 중 chunk하여 delete하기 위함)
             missing_numbers = [num for num in full_list if num not in self.idx[i]]
-            # print("self.idx[i]")
-            # print(self.idx[i])
-            # if len(self.idx[i]) == 0:
-            #     print("0 self.idx[i]")
-            #     print(self.idx[i])
+
+            if len(self.idx[i]) == 0:
+                print("0 self.idx[i]")
+                print(self.idx[i])
+
             if i > 1:
                 for a in missing_numbers:
                     if a == 0:
                         self.nChannels_copy -= nChannels
                     else:
-                        self.nChannels_copy -= 12
+                        self.nChannels_copy -= utils.growthRate
             interChannels = 4 * self.growthRate
             self.layers += [nn.BatchNorm2d(self.nChannels_copy),
+                            nn.ReLU(inplace=True),
                             nn.Conv2d(self.nChannels_copy, interChannels, kernel_size=1, bias=False),
                             nn.BatchNorm2d(interChannels),
+                            nn.ReLU(inplace=True),
                             nn.Conv2d(interChannels, self.growthRate, kernel_size=3, padding=1,
                                       bias=False)]
             self.nChannels += self.growthRate
@@ -86,10 +90,10 @@ class DenseBlock(nn.Module):
         return self.nChannels_copy + self.growthRate
 
     def forward(self, x):
-        for i in range(1, len(self.dense) // 4 + 1):
+        for i in range(1, len(self.dense) // 6 + 1):
             x_list = []
             if i == 1:  # 0번째 블락은 그냥 통과
-                globals()["out{}".format(i - 1)] = self.dense[(i - 1) * 4:i * 4](x)
+                globals()["out{}".format(i - 1)] = self.dense[(i - 1) * 6:i * 6](x)
                 globals()["x{}".format(i)] = torch.cat([x, globals()["out{}".format(i - 1)]], 1)
             else:
                 for q in self.idx[i]:
@@ -97,11 +101,11 @@ class DenseBlock(nn.Module):
                         x_list.append(x)
                     else:
                         x_list.append(globals()["out{}".format(q - 1)])
-                # if len(x_list) == 0:
-                #     print(x_list)
-                #     print(self.idx[i])
+                if len(x_list) == 0:
+                    print(x_list)
+                    print(self.idx[i])
                 globals()["x{}".format(i - 1)] = torch.cat(x_list, 1)
-                globals()["out{}".format(i - 1)] = self.dense[(i - 1) * 4:i * 4](globals()["x{}".format(i - 1)])
+                globals()["out{}".format(i - 1)] = self.dense[(i - 1) * 6:i * 6](globals()["x{}".format(i - 1)])
                 globals()["x{}".format(i)] = torch.cat(
                     [globals()["x{}".format(i - 1)], globals()["out{}".format(i - 1)]], 1)
 
@@ -157,3 +161,4 @@ class DenseNet(nn.Module):
         out = torch.squeeze(F.avg_pool2d(F.relu(self.bn1(out)), 8))
         out = out.view(-1, self.nChannels)
         return self.fc(out)
+
