@@ -179,12 +179,12 @@ class GA():
             net = train(net, trainloader, utils.GA_epoch, utils.device)
             accuracy = test(net, testloader, utils.device)
             acc.append(accuracy)
-            # params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
+            params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
 
-        print("acc = ", acc)
-        # print("params = ", params)
-        fitness = acc#self.fitness(acc, params)
-        print(fitness)
+        utils.print_and_log(logger, "acc = {}".format(acc))
+        utils.print_and_log(logger, "params = {}".format(params))
+        fitness = self.fitness(acc, params)
+        utils.print_and_log(logger, "fitness = {}".format(fitness))
 
         new_population = population
         for generation in range(self.generations):
@@ -217,9 +217,9 @@ class GA():
                 accuracy = test(net, testloader, utils.device)
                 acc.append(accuracy)
                 # params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
-            utils.print_and_log("acc = {} ", acc)
-            # print("params : {}".format(params))
-            fitness = acc#self.fitness(acc, params)
+            utils.print_and_log(logger, "acc = {} ".format(acc))
+            utils.print_and_log(logger, "params : {}".format(params))
+            fitness = self.fitness(acc, params)
             print("fitness : {}".format(fitness))
 
 
