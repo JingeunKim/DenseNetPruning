@@ -179,11 +179,11 @@ class GA():
             net = train(net, trainloader, utils.GA_epoch, utils.device)
             accuracy = test(net, testloader, utils.device)
             acc.append(accuracy)
-            params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
+            # params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
 
-        utils.print_and_log(logger, "acc = {}".format(acc))
-        utils.print_and_log(logger, "params = {}".format(params))
-        fitness = self.fitness(acc, params)
+        # utils.print_and_log(logger, "acc = {}".format(acc))
+        # utils.print_and_log(logger, "params = {}".format(params))
+        fitness = acc#self.fitness(acc, params)
         utils.print_and_log(logger, "fitness = {}".format(fitness))
 
         new_population = population
@@ -217,10 +217,10 @@ class GA():
                 accuracy = test(net, testloader, utils.device)
                 acc.append(accuracy)
                 # params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
-            utils.print_and_log(logger, "acc = {} ".format(acc))
-            utils.print_and_log(logger, "params : {}".format(params))
-            fitness = self.fitness(acc, params)
-            print("fitness : {}".format(fitness))
+            # utils.print_and_log(logger, "acc = {} ".format(acc))
+            # utils.print_and_log(logger, "params : {}".format(params))
+            fitness = acc#self.fitness(acc, params)
+            # print("fitness : {}".format(fitness))
 
 
             parents_population = new_population[:self.pop_size * self.number_blocks]
@@ -265,7 +265,7 @@ class GA():
 
             rank = np.argsort(fitness)[::-1]
             fitness = [fitness[i] for i in rank]
-
+            acc = fitness
             utils.print_and_log(logger, "Fitness values = {}".format(fitness))
             utils.print_and_log(logger, "Best Fitness value = {}".format(fitness[0]))
 
