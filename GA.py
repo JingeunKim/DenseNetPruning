@@ -30,6 +30,13 @@ class GA():
                 population.append(self.create_matrix(nb_layers))
         return population
 
+    def chk_diagonal(self, nb_layers, matrix):
+        for j in range(self.number_blocks):
+            matrix_ = matrix[j]
+            for i in range(nb_layers+1):
+                if matrix_[i][i+1] == 0:
+                    matrix_[i][i+1] = 1
+        return matrix
     def create_matrix(self, nb_layers):
         nb_layers = nb_layers + 2
         # 2 차원 배열 초기화
@@ -168,15 +175,15 @@ class GA():
                 device=utils.device)
 
             # d = torch.empty(64,3,32,32, dtype=torch.float32).to(utils.device)
-            # torch.onnx.export(net, d, 'test.onnx')
+            # torch.onnx.export(net, d, 'initialization.onnx')
             net = train(net, trainloader, utils.GA_epoch, utils.device)
             accuracy = test(net, testloader, utils.device)
             acc.append(accuracy)
-            params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
+            # params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
 
         print("acc = ", acc)
-        print("params = ", params)
-        fitness = self.fitness(acc, params)
+        # print("params = ", params)
+        fitness = acc#self.fitness(acc, params)
         print(fitness)
 
         new_population = population
@@ -193,7 +200,8 @@ class GA():
                     mutate_rand = random.random()
                     if mutate_rand <= utils.mutation_rate:
                         offspring1, offspring2 = self.mutation(offspring1, offspring2, nDenseBlocks)
-
+                offspring1 = self.chk_diagonal(nDenseBlocks, offspring1)
+                offspring2 = self.chk_diagonal(nDenseBlocks, offspring2)
                 new_population.extend(offspring1)
                 new_population.extend(offspring2)
             for p in range(self.pop_size + 1, len(new_population)):
@@ -208,20 +216,12 @@ class GA():
                 net = train(net, trainloader, utils.GA_epoch, utils.device)
                 accuracy = test(net, testloader, utils.device)
                 acc.append(accuracy)
-                params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
-                print(accuracy)
-
-            print("params : {}".format(params))
-            fitness = self.fitness(acc, params)
+                # params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
+            utils.print_and_log("acc = {} ", acc)
+            # print("params : {}".format(params))
+            fitness = acc#self.fitness(acc, params)
             print("fitness : {}".format(fitness))
 
-            rank = np.argsort(fitness)[::-1]
-            acc = np.array(acc)[rank]
-            # params = np.array(params)[rank]
-            acc = acc[:self.pop_size]
-            # params = params[:self.pop_size]
-            acc = acc.tolist()
-            # params = params.tolist()
 
             parents_population = new_population[:self.pop_size * self.number_blocks]
             parents_fitness = fitness[:self.pop_size]

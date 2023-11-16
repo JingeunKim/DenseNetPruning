@@ -8,6 +8,7 @@ mutation_rate = 0.1
 generation = 10
 number_population = 20
 prob = 0.5
+
 crossover = 'row-col'
 elitism = 0.2
 
