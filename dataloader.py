@@ -7,11 +7,18 @@ import utils
 def dataloader():
     normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
                                      std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
-    transform = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        normalize])
+
+    if utils.augmentation:
+        transform = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize])
+    else:
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            normalize])
+
     transform_test = transforms.Compose([
         transforms.ToTensor(),
         normalize

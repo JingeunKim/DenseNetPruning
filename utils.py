@@ -1,11 +1,12 @@
 import logging
 import datetime
+
 device = 'cuda'
 
 GA_epoch = 1
 crossover_rate = 1
 mutation_rate = 0.1
-generation = 10
+generation = 1
 number_population = 20
 prob = 0.5
 
@@ -24,7 +25,7 @@ reduction = 0.5
 bottleneck = True
 nClasses = 10
 
-
+augmentation = False
 
 def setup_logger():
     logger = logging.getLogger()

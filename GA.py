@@ -176,6 +176,7 @@ class GA():
 
             # d = torch.empty(64,3,32,32, dtype=torch.float32).to(utils.device)
             # torch.onnx.export(net, d, 'initialization.onnx')
+
             net = train(net, trainloader, utils.GA_epoch, utils.device)
             accuracy = test(net, testloader, utils.device)
             acc.append(accuracy)
@@ -285,6 +286,6 @@ class GA():
                              idx=idx[0:self.number_blocks]).to(
             device=utils.device)
         print(net)
-        torch.save(net, './models/model{:%Y%m%d}_{}.pt'.format(datetime.datetime.now(), utils.prob))
+        torch.save(net, './models/model{:%Y%m%d}_{}_{}.pt'.format(datetime.datetime.now(), utils.prob, str(utils.augmentation)))
         utils.print_and_log(logger, "# Params = {}".format(sum(p.numel() for p in net.parameters() if p.requires_grad)))
         utils.print_and_log(logger, "Finish")

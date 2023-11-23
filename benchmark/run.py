@@ -11,7 +11,8 @@ import torch.optim
 import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
-
+import re
+from ptflops import get_model_complexity_info
 import densenet as dn
 # used for logging to TensorBoard
 # from tensorboard_logger import configure, log_value
@@ -96,6 +97,14 @@ def main():
     print("model")
     print(model)
     print("# params : ", sum(p.numel() for p in model.parameters() if p.requires_grad))
+    macs, params = get_model_complexity_info(model, (3, 32, 32), as_strings=True, verbose=True)
+    # Extract the numerical value
+    flops = eval(re.findall(r'([\d.]+)', macs)[0]) * 2
+    # Extract the unit
+    flops_unit = re.findall(r'([A-Za-z]+)', macs)[0][0]
+    print('Computational complexity: {:<8}'.format(macs))
+    print('Computational complexity: {} {}Flops'.format(flops, flops_unit))
+    print('Number of parameters: {:<8}'.format(params))
     # optionally resume from a checkpoint
     if args.resume:
         if os.path.isfile(args.resume):
