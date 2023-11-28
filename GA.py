@@ -221,16 +221,18 @@ class GA():
             utils.print_and_log(logger, "acc = {} ".format(acc))
             utils.print_and_log(logger, "params : {}".format(params))
             fitness = self.fitness(acc, params)
-            # print("fitness : {}".format(fitness))
-
 
             parents_population = new_population[:self.pop_size * self.number_blocks]
             parents_fitness = fitness[:self.pop_size]
             idx_parents = idx[:self.pop_size * self.number_blocks]
+            parents_acc = acc[:self.pop_size]
+            parents_params = params[:self.pop_size]
 
             offspring_population = new_population[self.pop_size * self.number_blocks:]
             offspring_fitness = fitness[self.pop_size:]
             idx_offspring = idx[self.pop_size * self.number_blocks:]
+            offspring_acc = acc[self.pop_size:]
+            offspring_params = params[self.pop_size:]
 
             parent_rank = np.argsort(parents_fitness)[::-1]
             parents_population_rank = []
@@ -239,7 +241,8 @@ class GA():
                 parents_population_rank.extend(parents_population[(i - 1) * self.number_blocks:i * self.number_blocks])
                 idx_parents_rank.extend(idx_parents[(i - 1) * self.number_blocks:i * self.number_blocks])
             parents_fitness = [parents_fitness[i] for i in parent_rank]
-
+            parents_acc = [parents_acc[i] for i in parent_rank]
+            parents_params = [parents_params[i] for i in parent_rank]
 
             offspring_rank = np.argsort(offspring_fitness)[::-1]
             offspring_population_rank = []
@@ -249,24 +252,31 @@ class GA():
                     offspring_population[(i - 1) * self.number_blocks:i * self.number_blocks])
                 idx_offspring_rank.extend(idx_offspring[(i - 1) * self.number_blocks:i * self.number_blocks])
             offspring_fitness = [offspring_fitness[i] for i in offspring_rank]
-
+            offspring_acc = [offspring_acc[i] for i in offspring_rank]
+            offspring_params = [offspring_params[i] for i in offspring_rank]
 
             elite_rate = utils.elitism
             parents_population = parents_population[:int(self.pop_size * elite_rate) * self.number_blocks]
             parents_fitness = parents_fitness[:int(self.pop_size * elite_rate)]
             idx_parents = idx_parents[:int(self.pop_size * elite_rate) * self.number_blocks]
+            parents_acc = parents_acc[:int(self.pop_size*elite_rate)]
+            parents_params = parents_params[:int(self.pop_size*elite_rate)]
 
             offspring_population = offspring_population[:int(self.pop_size * (1 - elite_rate)) * self.number_blocks]
             offspring_fitness = offspring_fitness[:int(self.pop_size * (1 - elite_rate))]
             idx_offspring = idx_offspring[:int(self.pop_size * (1 - elite_rate)) * self.number_blocks]
+            offspring_acc = offspring_acc[:int(self.pop_size * (1 - elite_rate))]
+            offspring_params = offspring_params[:int(self.pop_size*elite_rate)]
 
             new_population = parents_population + offspring_population  # np.concatenate((parents_population, offspring_population), axis=0)
             fitness = parents_fitness + offspring_fitness
             idx = idx_parents + idx_offspring
+            acc = parents_acc + offspring_acc
+            params = parents_params + offspring_params
 
             rank = np.argsort(fitness)[::-1]
             fitness = [fitness[i] for i in rank]
-            acc = fitness
+
             utils.print_and_log(logger, "Fitness values = {}".format(fitness))
             utils.print_and_log(logger, "Best Fitness value = {}".format(fitness[0]))
 
