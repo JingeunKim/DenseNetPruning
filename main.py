@@ -18,7 +18,8 @@ end = time.time()
 utils.print_and_log(logger, "GA TIME : {}".format(end-start))
 
 model = torch.load('./models/model{:%Y%m%d}_{}_{}.pt'.format(datetime.datetime.now(), utils.prob, str(utils.augmentation)))
-
+# model = torch.load('./models/model20231116_0.9.pt')
+utils.print_and_log(logger, "Model : model{:%Y%m%d}_{}_{}.pt".format(datetime.datetime.now(), utils.prob, str(utils.augmentation)))
 num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 utils.print_and_log(logger, "train & test")
 utils.print_and_log(logger, "Best model # params =  {}".format(num_params))

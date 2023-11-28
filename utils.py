@@ -6,8 +6,8 @@ device = 'cuda'
 GA_epoch = 1
 crossover_rate = 1
 mutation_rate = 0.1
-generation = 1
-number_population = 20
+generation = 10
+number_population = 40
 prob = 0.5
 
 crossover = 'row-col'
@@ -25,7 +25,7 @@ reduction = 0.5
 bottleneck = True
 nClasses = 10
 
-augmentation = False
+augmentation = True
 
 def setup_logger():
     logger = logging.getLogger()
