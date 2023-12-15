@@ -2,7 +2,7 @@ import torch.optim as optim
 from torch import nn
 from tqdm import tqdm
 import utils
-import torch
+
 
 def train(net, trainloader, epochs, device):
     print("train phase")
@@ -32,7 +32,6 @@ def train(net, trainloader, epochs, device):
     print()
     print('Finished Training')
     return net
-
 
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 after 150 and 225 epochs"""
