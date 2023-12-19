@@ -6,8 +6,8 @@ device = 'cuda'
 GA_epoch = 1
 crossover_rate = 1
 mutation_rate = 0.1
-generation = 1
-number_population = 4000
+generation = 30
+number_population = 40
 prob = 0.5
 
 crossover = 'row-col'
