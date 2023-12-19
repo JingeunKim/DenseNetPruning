@@ -12,8 +12,9 @@ from utils import logger
 import multiprocessing as mp
 import joblib
 import pandas as pd
-from catboost import CatBoostRegressor
-
+# from catboost import CatBoostRegressr
+from sklearn.ensemble import GradientBoostingRegressor
+import time
 
 class GA():
     def __init__(self, nDenseBlock, Bottleneck):
@@ -32,7 +33,7 @@ class GA():
         population = []
         for p in range(self.pop_size):
             for q in range(self.number_blocks):
-                population.append(self.create_matrix(nb_layers))
+                population.append(self.create_matrix(nb_layers, p))
         return population
 
     def chk_diagonal(self, nb_layers, matrix):
@@ -43,9 +44,9 @@ class GA():
                     matrix_[i][i + 1] = 1
         return matrix
 
-    def create_matrix(self, nb_layers):
+    def create_matrix(self, nb_layers, seed):
         # random seed
-        # random.seed(10)
+        random.seed(seed)
 
         nb_layers = nb_layers + 2
         # 2 차원 배열 초기화
@@ -210,8 +211,10 @@ class GA():
         surrogate_label = pd.DataFrame(acc)
         surrogate_trainset = pd.concat([surrogate_data_df, surrogate_label], axis=1)
         X, y = surrogate_trainset.iloc[:, :-1], surrogate_trainset.iloc[:, -1]
-        predictor = CatBoostRegressor(verbose=0)
+        predictor = GradientBoostingRegressor()
+        start = time.process_time()
         predictor.fit(X, y)
+        utils.print_and_log(logger, "Time taken by surrogate to train the model {}".format(time.process_time() - start))
 
 
         new_population = population
@@ -246,9 +249,10 @@ class GA():
                                    idx=idx[(m - 1) * self.number_blocks:m * self.number_blocks]).to(
                         device=utils.device)
                     matrix = np.array(new_population[(m - 1) * self.number_blocks:m * self.number_blocks])
-                    test_matrix = matrix.ravel()
+                    test_matrix = matrix.ravel().reshape(1, -1)
                     accuracy = predictor.predict(test_matrix)
-                    acc.append(accuracy)
+                    acc.append(accuracy[0])
+
                 else:
                     net = DenseNet(growthRate=utils.growthRate, depth=utils.depth, reduction=utils.reduction,
                                    bottleneck=True, nClasses=utils.nClasses,
@@ -265,11 +269,13 @@ class GA():
 
             new_surrogate_data = pd.DataFrame(dataset)
             new_label = pd.DataFrame(acc[-4:])
-            new_surrogate_label = pd.concat([surrogate_label, new_label], axis=0, ignore_index=True)
-            new_surrogate_trainset = pd.concat([new_surrogate_data, new_surrogate_label], axis=1)
+            surrogate_label = pd.concat([surrogate_label, new_label], axis=0, ignore_index=True)
+            new_surrogate_trainset = pd.concat([new_surrogate_data, surrogate_label], axis=1)
             X, y = new_surrogate_trainset.iloc[:, :-1], new_surrogate_trainset.iloc[:, -1]
-            predictor = CatBoostRegressor(verbose=0)
+            # predictor = CatBoostRegressor(verbose=0)
+            start = time.process_time()
             predictor.fit(X, y)
+            utils.print_and_log(logger, "Time taken by surrogate to train the model {}".format(time.process_time() - start))
 
             utils.print_and_log(logger, "prob = {} acc = {} ".format(self.prob, acc))
             # utils.print_and_log(logger, "params : {}".format(params))
