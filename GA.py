@@ -172,7 +172,7 @@ class GA():
 
         population = self.create_init_pop(nDenseBlocks)
         graph = np.array(population)
-        np.save('train_data' + str(utils.generation) + "_" + str(utils.prob) + '.npy', graph)
+        np.save('train_data' + str(utils.generation) + "_" + str(utils.prob) + "_" + str(utils.dataset) +'.npy', graph)
         # for row in population:
         #     print(row)
         idx = []
