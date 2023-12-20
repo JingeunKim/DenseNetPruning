@@ -8,33 +8,6 @@ from GA import GA
 import datetime
 from utils import logger
 import time
-from multiprocessing import Pool
-import os
-
-
-# def run_ga(prob):
-#     ga = GA(100, True, prob)
-#     start_time = time.time()
-#     net = ga.evolve()
-#     end_time = time.time()
-#     return prob, net, end_time - start_time
-#
-# if __name__ == '__main__':
-#     pool = Pool(os.cpu_count())
-#
-#     prob_values = [utils.prob, utils.prob + 0.1, utils.prob + 0.2, utils.prob + 0.3, utils.prob + 0.4]
-#
-#     results = pool.map_async(run_ga, prob_values)
-#     result_get = results.get()
-#
-#     for prob, result, time_taken in result_get:
-#         utils.print_and_log(logger, f"prob = {prob} acc = {result} GA TIME : {time_taken}")
-#
-#     for p in results:
-#         pool.close()
-#
-#     pool.close()
-#     pool.join()
 
 
 start = time.time()

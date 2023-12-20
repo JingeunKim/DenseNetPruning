@@ -2,6 +2,7 @@ import logging
 import datetime
 
 device = 'cuda'
+dataset = 'cifar-100'
 
 GA_epoch = 1
 crossover_rate = 1
@@ -23,13 +24,16 @@ growthRate = 12
 depth = 100
 reduction = 0.5
 bottleneck = True
-nClasses = 10
+if dataset == 'cifar-10':
+    nClasses = 10
+elif dataset == 'cifar-100':
+    nClasses = 100
 
 augmentation = True
 
 def setup_logger():
     logger = logging.getLogger()
-    log_path = './logs/{:%Y%m%d}.log'.format(datetime.datetime.now())
+    log_path = './logs/{:%Y%m%d}_{}.log'.format(datetime.datetime.now(), dataset)
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter(fmt='%(asctime)s: %(message)s', datefmt='%H:%M:%S')
     fh = logging.FileHandler(log_path)
