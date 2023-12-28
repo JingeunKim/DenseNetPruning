@@ -1,6 +1,6 @@
 import random
 from model import DenseNet
-from train import train, GAtrain
+from train import GAtrain
 from test import test
 import utils
 import dataloader
