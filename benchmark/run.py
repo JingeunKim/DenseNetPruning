@@ -52,8 +52,7 @@ parser.set_defaults(bottleneck=True)
 parser.set_defaults(augment=True)
 
 best_prec1 = 0
-use_mps = torch.backends.mps.is_available()
-device = torch.device("mps" if use_mps else "cpu")
+device = torch.device('cuda')
 
 
 def main():

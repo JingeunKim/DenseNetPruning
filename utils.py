@@ -2,12 +2,12 @@ import logging
 import datetime
 
 device = 'cuda'
-dataset = 'cifar-100'
+dataset = 'cifar-10'
 
-GA_epoch = 1
+GA_epoch = 10
 crossover_rate = 1
-mutation_rate = 0.1
-generation = 30
+mutation_rate = 0.4
+generation = 40
 number_population = 40
 prob = 0.5
 

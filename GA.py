@@ -1,6 +1,6 @@
 import random
 from model import DenseNet
-from train import train
+from train import train, GAtrain
 from test import test
 import utils
 import dataloader
@@ -15,6 +15,7 @@ import pandas as pd
 # from catboost import CatBoostRegressr
 from sklearn.ensemble import GradientBoostingRegressor
 import time
+import matplotlib.pyplot as plt
 
 class GA():
     def __init__(self, nDenseBlock, Bottleneck):
@@ -159,9 +160,6 @@ class GA():
         return offspring1, offspring2
 
     def evolve(self):
-        c_proc = mp.current_process()
-
-        print("Running on Process", c_proc.name, "PID", c_proc.pid)
         if not os.path.exists('./models'): os.mkdir('./models')
         if not os.path.exists('./logs'): os.mkdir('./logs')
 
@@ -179,31 +177,37 @@ class GA():
         for p in range(self.pop_size * 3):
             idx.append(self.chk(nDenseBlocks, population[p]))
         # print("idx = ", idx)
-        trainloader, testloader, classes = dataloader.dataloader()
+        trainloader, testloader, classes = dataloader.GAdataloader()
         acc = []
         # params = []
+
         for i in range(1, self.pop_size + 1):
             net = DenseNet(growthRate=utils.growthRate, depth=utils.depth, reduction=utils.reduction,
                            bottleneck=utils.bottleneck, nClasses=utils.nClasses,
                            matrix=population[(i - 1) * self.number_blocks:i * self.number_blocks],
                            idx=idx[(i - 1) * self.number_blocks:i * self.number_blocks]).to(
                 device=utils.device)
-
             # d = torch.empty(64,3,32,32, dtype=torch.float32).to(utils.device)
             # torch.onnx.export(net, d, 'initialization.onnx')
 
-            net = train(net, trainloader, utils.GA_epoch, utils.device)
-            accuracy = test(net, testloader, utils.device)
+            net, loss = GAtrain(net, trainloader, utils.GA_epoch, utils.device)
+            # accuracy = test(net, testloader, utils.device)
 
-            acc.append(accuracy)
+            acc.append(loss)
             # params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
 
-        utils.print_and_log(logger, "prob = {} acc = {}".format(self.prob, acc))
+        utils.print_and_log(logger, "prob = {} loss = {}".format(self.prob, acc))
+        # utils.print_and_log(logger, "# params = {}".format(params))
         # utils.print_and_log(logger, "params = {}".format(params))
         fitness = acc  # self.fitness(acc, params)
+        # second_fitness = params
+        # plt.scatter(fitness, second_fitness, marker='o', color='blue')
+        # plt.xlabel('Error rate')
+        # plt.ylabel('# params')
+        # plt.show()
         # utils.print_and_log(logger, "prob = {} fitness = {}".format(self.prob, fitness))
 
-        surrogate_data = np.load('./train_data' + str(utils.generation) + "_" + str(utils.prob) + '.npy')
+        surrogate_data = np.load('./train_data' + str(utils.generation) + "_" + str(utils.prob) + "_" + str(utils.dataset) +'.npy')
         dataset = []
         for i in range(utils.number_population):
             dataset.append(surrogate_data[i*self.number_blocks:(i+1)*self.number_blocks].ravel())
@@ -239,71 +243,78 @@ class GA():
                 idx.append(self.chk(nDenseBlocks, new_population[p]))
             # print("idx = ", idx)
 
-            do_surrogate = self.pop_size + int(self.pop_size*0.9)
+            do_GAtrain = int(self.pop_size*0.1)
 
             for m in range(self.pop_size, self.pop_size * 2):
-                if m < do_surrogate:
-                    net = DenseNet(growthRate=utils.growthRate, depth=utils.depth, reduction=utils.reduction,
-                                   bottleneck=True, nClasses=utils.nClasses,
-                                   matrix=new_population[(m - 1) * self.number_blocks:m * self.number_blocks],
-                                   idx=idx[(m - 1) * self.number_blocks:m * self.number_blocks]).to(
-                        device=utils.device)
-                    matrix = np.array(new_population[(m - 1) * self.number_blocks:m * self.number_blocks])
-                    test_matrix = matrix.ravel().reshape(1, -1)
-                    accuracy = predictor.predict(test_matrix)
-                    acc.append(accuracy[0])
+                net = DenseNet(growthRate=utils.growthRate, depth=utils.depth, reduction=utils.reduction,
+                               bottleneck=True, nClasses=utils.nClasses,
+                               matrix=new_population[(m - 1) * self.number_blocks:m * self.number_blocks],
+                               idx=idx[(m - 1) * self.number_blocks:m * self.number_blocks]).to(
+                    device=utils.device)
+                matrix = np.array(new_population[(m - 1) * self.number_blocks:m * self.number_blocks])
+                test_matrix = matrix.ravel().reshape(1, -1)
+                accuracy = predictor.predict(test_matrix)
+                acc.append(accuracy[0])
+            chd_surrogate_acc = acc[self.pop_size:]
+            top4_chd = sorted(list(enumerate(chd_surrogate_acc)), key=lambda x: x[1])
+            top4_chd = [index for index, value in top4_chd[:do_GAtrain]]
+            add_label = []
+            for do in range(do_GAtrain):
+                net = DenseNet(growthRate=utils.growthRate, depth=utils.depth, reduction=utils.reduction,
+                               bottleneck=True, nClasses=utils.nClasses,
+                               matrix=new_population[((self.pop_size+top4_chd[do]) - 1) * self.number_blocks:(self.pop_size+top4_chd[do]) * self.number_blocks],
+                               idx=idx[((self.pop_size+top4_chd[do]) - 1) * self.number_blocks:(self.pop_size+top4_chd[do]) * self.number_blocks]).to(
+                    device=utils.device)
+                net, loss = GAtrain(net, trainloader, utils.GA_epoch, utils.device)
+                # accuracy = test(net, testloader, utils.device)
+                acc[self.pop_size+top4_chd[do]] = loss
+                add_label.append(loss)
+                # # params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
 
-                else:
-                    net = DenseNet(growthRate=utils.growthRate, depth=utils.depth, reduction=utils.reduction,
-                                   bottleneck=True, nClasses=utils.nClasses,
-                                   matrix=new_population[(m - 1) * self.number_blocks:m * self.number_blocks],
-                                   idx=idx[(m - 1) * self.number_blocks:m * self.number_blocks]).to(
-                        device=utils.device)
-                    net = train(net, trainloader, utils.GA_epoch, utils.device)
-                    accuracy = test(net, testloader, utils.device)
-                    acc.append(accuracy)
-
-                    matrix = np.array(new_population[(m - 1) * self.number_blocks:m * self.number_blocks])
-                    new_train_matrix = matrix.ravel()
-                    dataset.append(new_train_matrix)
-
+                matrix = np.array(new_population[((self.pop_size+top4_chd[do]) - 1) * self.number_blocks:(self.pop_size+top4_chd[do]) * self.number_blocks])
+                new_train_matrix = matrix.ravel()
+                dataset.append(new_train_matrix)
             new_surrogate_data = pd.DataFrame(dataset)
-            new_label = pd.DataFrame(acc[-4:])
+            new_label = pd.DataFrame(add_label)
             surrogate_label = pd.concat([surrogate_label, new_label], axis=0, ignore_index=True)
             new_surrogate_trainset = pd.concat([new_surrogate_data, surrogate_label], axis=1)
             X, y = new_surrogate_trainset.iloc[:, :-1], new_surrogate_trainset.iloc[:, -1]
-            # predictor = CatBoostRegressor(verbose=0)
             start = time.process_time()
             predictor.fit(X, y)
             utils.print_and_log(logger, "Time taken by surrogate to train the model {}".format(time.process_time() - start))
 
-            utils.print_and_log(logger, "prob = {} acc = {} ".format(self.prob, acc))
+            utils.print_and_log(logger, "prob = {} loss = {}".format(self.prob, acc))
+            # utils.print_and_log(logger, "# params = {}".format(params))
             # utils.print_and_log(logger, "params : {}".format(params))
             fitness = acc  # self.fitness(acc, params)
+            # second_fitness = params
 
             parents_population = new_population[:self.pop_size * self.number_blocks]
             parents_fitness = fitness[:self.pop_size]
+            # parents_second_fitness = second_fitness[:self.pop_size]
             idx_parents = idx[:self.pop_size * self.number_blocks]
             parents_acc = acc[:self.pop_size]
             # parents_params = params[:self.pop_size]
 
             offspring_population = new_population[self.pop_size * self.number_blocks:]
             offspring_fitness = fitness[self.pop_size:]
+            # offspring_second_fitness = second_fitness[:self.pop_size]
             idx_offspring = idx[self.pop_size * self.number_blocks:]
             offspring_acc = acc[self.pop_size:]
             # offspring_params = params[self.pop_size:]
 
-            parent_rank = np.argsort(parents_fitness)[::-1]
+            parent_rank = np.argsort(parents_fitness)
             parents_population_rank = []
             idx_parents_rank = []
             for i in parent_rank + 1:
                 parents_population_rank.extend(parents_population[(i - 1) * self.number_blocks:i * self.number_blocks])
                 idx_parents_rank.extend(idx_parents[(i - 1) * self.number_blocks:i * self.number_blocks])
             parents_fitness = [parents_fitness[i] for i in parent_rank]
+            # parents_second_fitness = [parents_second_fitness[i] for i in parent_rank]
             parents_acc = [parents_acc[i] for i in parent_rank]
             # parents_params = [parents_params[i] for i in parent_rank]
 
-            offspring_rank = np.argsort(offspring_fitness)[::-1]
+            offspring_rank = np.argsort(offspring_fitness)
             offspring_population_rank = []
             idx_offspring_rank = []
             for i in parent_rank + 1:
@@ -311,36 +322,41 @@ class GA():
                     offspring_population[(i - 1) * self.number_blocks:i * self.number_blocks])
                 idx_offspring_rank.extend(idx_offspring[(i - 1) * self.number_blocks:i * self.number_blocks])
             offspring_fitness = [offspring_fitness[i] for i in offspring_rank]
+            # offspring_second_fitness = [offspring_second_fitness[i] for i in offspring_rank]
             offspring_acc = [offspring_acc[i] for i in offspring_rank]
             # offspring_params = [offspring_params[i] for i in offspring_rank]
 
             elite_rate = utils.elitism
             parents_population = parents_population[:int(self.pop_size * elite_rate) * self.number_blocks]
             parents_fitness = parents_fitness[:int(self.pop_size * elite_rate)]
+            # parents_second_fitness = parents_second_fitness[:int(self.pop_size * elite_rate)]
             idx_parents = idx_parents[:int(self.pop_size * elite_rate) * self.number_blocks]
             parents_acc = parents_acc[:int(self.pop_size * elite_rate)]
             # parents_params = parents_params[:int(self.pop_size*elite_rate)]
 
             offspring_population = offspring_population[:int(self.pop_size * (1 - elite_rate)) * self.number_blocks]
             offspring_fitness = offspring_fitness[:int(self.pop_size * (1 - elite_rate))]
+            # offspring_second_fitness = offspring_second_fitness[:int(self.pop_size * (1 - elite_rate))]
             idx_offspring = idx_offspring[:int(self.pop_size * (1 - elite_rate)) * self.number_blocks]
             offspring_acc = offspring_acc[:int(self.pop_size * (1 - elite_rate))]
             # offspring_params = offspring_params[:int(self.pop_size*elite_rate)]
 
             new_population = parents_population + offspring_population  # np.concatenate((parents_population, offspring_population), axis=0)
             fitness = parents_fitness + offspring_fitness
+            # second_fitness = parents_second_fitness + offspring_second_fitness
             idx = idx_parents + idx_offspring
             acc = parents_acc + offspring_acc
             # params = parents_params + offspring_params
 
-            rank = np.argsort(fitness)[::-1]
+            rank = np.argsort(fitness)
             utils.print_and_log(logger, "Fitness values = {}".format(fitness))
             fitness = [fitness[i] for i in rank]
-
+            # second_fitness = [second_fitness[i] for i in rank]
             # utils.print_and_log(logger, "Fitness values = {}".format(fitness))
             utils.print_and_log(logger, "Best Fitness value = {}".format(fitness[0]))
+            # utils.print_and_log(logger, "Best 2_Fitness value = {}".format(second_fitness[0]))
 
-        rank = np.argsort(fitness)[::-1]
+        rank = np.argsort(fitness)
         population_rank = []
         idx_rank = []
         for i in rank + 1:
@@ -350,7 +366,7 @@ class GA():
         idx = idx[:self.number_blocks]
         best_model = new_population[:self.number_blocks]
 
-        net = DenseNet(growthRate=12, depth=100, reduction=0.5, bottleneck=True, nClasses=10,
+        net = DenseNet(growthRate=12, depth=100, reduction=0.5, bottleneck=True, nClasses=utils.nClasses,
                        matrix=best_model[0:self.number_blocks],
                        idx=idx[0:self.number_blocks]).to(
             device=utils.device)
