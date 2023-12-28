@@ -1,9 +1,6 @@
 import torch
 from tqdm import tqdm
-import time
-from torch import nn
 def test(testloader, model, device):
-    all_loss = []
     correct = 0
     total = 0
     print("test")

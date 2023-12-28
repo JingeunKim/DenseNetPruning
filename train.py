@@ -3,6 +3,46 @@ from torch import nn
 from tqdm import tqdm
 import utils
 import time
+# def train(train_loader, model, criterion, optimizer, epoch):
+def train(net, trainloader, epochs, device):
+    """Train for one epoch on the training set"""
+    print("train phase")
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(), lr=utils.lr, weight_decay=utils.weight_decay, nesterov=True, momentum=utils.momentum)
+
+    for epoch in range(epochs):
+        adjust_learning_rate(optimizer, epoch)
+        net.train()
+        running_loss = 0.0
+        bar = tqdm(trainloader, unit="batch", desc=f"Epoch {epoch + 1}", ncols=70)
+        for data in bar:
+            inputs, labels = data
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+
+            optimizer.zero_grad()
+            outputs = net(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+
+            running_loss += loss.item()
+            bar.set_postfix(loss=loss.item())
+        # print("running_loss = ", loss.item())
+    print()
+    print('Finished Training')
+    return net
+
+def adjust_learning_rate(optimizer, epoch):
+    """Sets the learning rate to the initial LR decayed by 10 after 150 and 225 epochs"""
+    lr = utils.lr * (0.1 ** (epoch // 150)) * (0.1 ** (epoch // 225))
+    # log to TensorBoard
+    # if args.tensorboard:
+    # print('learning_rate', lr, epoch)
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+
+
 class AverageMeter(object):
     """Computes and stores the average and current value"""
 
