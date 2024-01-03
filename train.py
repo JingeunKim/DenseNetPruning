@@ -3,13 +3,14 @@ from torch import nn
 from tqdm import tqdm
 import utils
 import time
+import test
 # def train(train_loader, model, criterion, optimizer, epoch):
-def train(net, trainloader, epochs, device):
+def train(net, trainloader, epochs, device, testloader):
     """Train for one epoch on the training set"""
     print("train phase")
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=utils.lr, weight_decay=utils.weight_decay, nesterov=True, momentum=utils.momentum)
-
+    best_error = 100
     for epoch in range(epochs):
         adjust_learning_rate(optimizer, epoch)
         net.train()
@@ -29,9 +30,13 @@ def train(net, trainloader, epochs, device):
             running_loss += loss.item()
             bar.set_postfix(loss=loss.item())
         # print("running_loss = ", loss.item())
+        error_rate = test.test(testloader, net, utils.device)
+        if best_error > error_rate:
+            best_error = error_rate
+        print('best_error :', best_error)
     print()
     print('Finished Training')
-    return net
+    return net, best_error
 
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 after 150 and 225 epochs"""

@@ -47,7 +47,7 @@ class GA():
 
     def create_matrix(self, nb_layers, seed):
         # random seed
-        random.seed(seed)
+        # random.seed(seed)
 
         nb_layers = nb_layers + 2
         # 2 차원 배열 초기화

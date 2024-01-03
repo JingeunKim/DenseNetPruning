@@ -5,6 +5,7 @@ def test(testloader, model, device):
     total = 0
     print("test")
     model.eval()
+    incorrect=0
     with torch.no_grad():
         for data in tqdm(testloader, unit="batch"):
             images, labels = data
@@ -16,8 +17,9 @@ def test(testloader, model, device):
             total += labels.size(0)
             # correct += (predicted == labels).float().sum().item()
             correct += predicted.eq(labels).sum().item()
+            incorrect += predicted.ne(labels.data).cpu().sum()
 
-            error_rate = 100. - 100. * correct / total
+            error_rate = 100. * incorrect / total
 
             # error_rate = 100 - acc
     print('error_rate of the network on the 10000 test images: {}'.format(error_rate))
