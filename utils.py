@@ -2,7 +2,7 @@ import logging
 import datetime
 
 device = 'cuda'
-dataset = 'cifar-100'
+dataset = 'cifar-10'
 
 GA_epoch = 10
 crossover_rate = 1

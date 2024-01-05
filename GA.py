@@ -351,10 +351,7 @@ class GA():
             rank = np.argsort(fitness)
             utils.print_and_log(logger, "Fitness values = {}".format(fitness))
             best_fitness = [fitness[i] for i in rank]
-            # second_fitness = [second_fitness[i] for i in rank]
-            # utils.print_and_log(logger, "Fitness values = {}".format(fitness))
             utils.print_and_log(logger, "Best Fitness value = {}".format(best_fitness[0]))
-            # utils.print_and_log(logger, "Best 2_Fitness value = {}".format(second_fitness[0]))
 
         rank = np.argsort(fitness)
         population_rank = []
