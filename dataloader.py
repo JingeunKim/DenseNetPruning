@@ -6,8 +6,12 @@ import numpy as np
 
 from torch.utils.data import SubsetRandomSampler
 def dataloader():
-    normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
-                                     std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
+    if utils.dataset =='cifar-10':
+        normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
+                                         std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
+    elif utils.dataset =='cifar-100':
+        normalize = transforms.Normalize(mean=[x / 255.0 for x in [129.3, 124.1, 112.4]],
+                                         std=[x / 255.0 for x in [68.2, 65.4, 70.4]])
 
     if utils.augmentation:
         transform = transforms.Compose([
@@ -54,8 +58,12 @@ def dataloader():
 
 
 def GAdataloader():
-    normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
-                                     std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
+    if utils.dataset =='cifar-10':
+        normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
+                                         std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
+    elif utils.dataset =='cifar-100':
+        normalize = transforms.Normalize(mean=[x / 255.0 for x in [129.3, 124.1, 112.4]],
+                                         std=[x / 255.0 for x in [68.2, 65.4, 70.4]])
     if utils.augmentation:
         transform = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
