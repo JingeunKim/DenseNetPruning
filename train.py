@@ -86,73 +86,25 @@ def accuracy(output, target, topk=(1,)):
 
 
 def GAtrain(model, train_loader, epochs, device):
-    """Train for one epoch on the training set"""
-    batch_time = AverageMeter()
-    losses = AverageMeter()
-    top1 = AverageMeter()
-
+    print("GAtrain")
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=utils.lr, weight_decay=utils.weight_decay, nesterov=True,
                           momentum=utils.momentum)
     # switch to train mode
     model.train()
     for epoch in range(epochs):
-        end = time.time()
+        # end = time.time()
         for i, (input, target) in enumerate(train_loader):
             target = target.to(device)
             input = input.to(device)
 
-            # compute output
             output = model(input)
             loss = criterion(output, target)
 
-            # measure accuracy and record loss
-            prec1 = accuracy(output.data, target, topk=(1,))[0]
-            losses.update(loss.data, input.size(0))
-            top1.update(prec1, input.size(0))
-
-            # compute gradient and do SGD step
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            # measure elapsed time
-            batch_time.update(time.time() - end)
-            end = time.time()
-
-            if i % 100 == 0:
-                print('Epoch: [{0}][{1}/{2}]\t'
-                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                      'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
-                    epoch, i, len(train_loader), batch_time=batch_time,
-                    loss=losses, top1=top1))
-    print()
     print('Finished Training')
+    print("loss = ", loss.item())
     return model, loss.item()
-    # print("train phase")
-    # criterion = nn.CrossEntropyLoss()
-    # optimizer = optim.SGD(net.parameters(), lr=utils.lr, weight_decay=utils.weight_decay, nesterov=True, momentum=utils.momentum)
-    #
-    # for epoch in range(epochs):
-    #     adjust_learning_rate(optimizer, epoch)
-    #     net.train()
-    #     running_loss = 0.0
-    #     bar = tqdm(trainloader, unit="batch", desc=f"Epoch {epoch + 1}", ncols=70)
-    #     for data in bar:
-    #         inputs, labels = data
-    #         inputs = inputs.to(device)
-    #         labels = labels.to(device)
-    #
-    #         optimizer.zero_grad()
-    #         outputs = net(inputs)
-    #         loss = criterion(outputs, labels)
-    #         loss.backward()
-    #         optimizer.step()
-    #
-    #         running_loss += loss.item()
-    #         bar.set_postfix(loss=loss.item())
-    #     # print("running_loss = ", loss.item())
-    # print()
-    # print('Finished Training')
-    # return net,loss.item()

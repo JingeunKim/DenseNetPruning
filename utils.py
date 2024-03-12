@@ -2,14 +2,14 @@ import logging
 import datetime
 
 device = 'cuda'
-dataset = 'cifar-100'
+dataset = 'cifar-10'
 
-GA_epoch = 10
-crossover_rate = 1
-mutation_rate = 0.4
-generation = 40
+GA_epoch = 30
+crossover_rate = 0.9
+mutation_rate = 0.05
+generation = 60
 number_population = 40
-prob = 0.5
+prob = 0.6
 
 crossover = 'row-col'
 elitism = 0.2
@@ -31,6 +31,12 @@ elif dataset == 'cifar-100':
 
 augmentation = True
 
+if augmentation != False:
+    pass
+else:
+    dropout = 0.2
+
+
 def setup_logger():
     logger = logging.getLogger()
     log_path = './logs/{:%Y%m%d}_{}.log'.format(datetime.datetime.now(), dataset)
@@ -41,6 +47,20 @@ def setup_logger():
     logger.addHandler(fh)
     return logger
 
+def bench_setup_logger():
+    logger = logging.getLogger()
+    log_path = './bench_logs/{:%Y%m%d}_{}.log'.format(datetime.datetime.now(), dataset)
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter(fmt='%(asctime)s: %(message)s', datefmt='%H:%M:%S')
+    fh = logging.FileHandler(log_path)
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+    return logger
+
+def bench_print_and_log(logger, msg):
+    # global logger
+    print(msg)
+    logger.info(msg)
 
 def print_and_log(logger, msg):
     # global logger
@@ -48,3 +68,4 @@ def print_and_log(logger, msg):
     logger.info(msg)
 
 logger = setup_logger()
+# bench_logger = bench_setup_logger()

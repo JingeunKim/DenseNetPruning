@@ -14,6 +14,7 @@ import joblib
 import pandas as pd
 # from catboost import CatBoostRegressr
 from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.tree import DecisionTreeRegressor
 import time
 import matplotlib.pyplot as plt
 
@@ -23,18 +24,19 @@ class GA():
         self.generations = utils.generation
         self.nDenseBlock = nDenseBlock
         self.Bottleneck = Bottleneck
-        self.prob = utils.prob
+        # self.prob = utils.prob
         self.number_blocks = 3
 
         utils.print_and_log(logger,
-                            "GA start generation : " + str(self.generations) + " population : " + str(
-                                self.pop_size) + " prob : " + str(self.prob) + " crossover : " + str(utils.crossover))
+                            "GA start generation : " + str(self.generations) + " BC = " + str(utils.bottleneck) + " population : " + str(self.pop_size))
 
     def create_init_pop(self, nb_layers):
         population = []
+        i = 0
         for p in range(self.pop_size):
             for q in range(self.number_blocks):
-                population.append(self.create_matrix(nb_layers, p))
+                population.append(self.create_matrix(nb_layers, i))
+                i += 1
         return population
 
     def chk_diagonal(self, nb_layers, matrix):
@@ -50,18 +52,17 @@ class GA():
         random.seed(seed)
 
         nb_layers = nb_layers + 2
-        # 2 차원 배열 초기화
         matrix = [[0 for _ in range(nb_layers)] for _ in range(nb_layers)]
 
-        # 대각선 위 요소를 1로 채우기
         for i in range(nb_layers - 1):
             matrix[i][i + 1] = 1
 
-        # 대각선 위 요소 이외의 요소를 랜덤하게 0 또는 1로 채우기
+        one_prob = [0.9, 0.85, 0.80, 0.75, 0.70, 0.65, 0.60, 0.55, 0.50]
         for i in range(nb_layers):
             for j in range(i + 2, nb_layers):
                 prob = random.random()
-                if prob <= self.prob:
+                # print(prob)
+                if prob <= random.choice(one_prob):
                     matrix[i][j] = 1
                 else:
                     matrix[i][j] = 0
@@ -90,33 +91,43 @@ class GA():
         fitness = [x / y for x, y in zip(acc, params)]
         return fitness
 
-    def selection(self, selected_number):
+    def selection(self, selected_number, seed):
+        random.seed(seed)
         parents = random.sample(selected_number, 2)
         for rand in parents:
             selected_number.remove(rand)
-
         return parents, selected_number
 
     def crossover(self, p1, p2, new_population, nDenseBlocks):
-        if utils.crossover == 'one-point':
-            # one-point crossover
+        ran_num = np.random.rand()
+        if ran_num <= 0.33:
+            # one-point crossover row
             parent1 = np.array(new_population[p1 * self.number_blocks:(p1 + 1) * self.number_blocks])
             parent2 = np.array(new_population[p2 * self.number_blocks:(p2 + 1) * self.number_blocks])
 
-            point = random.randint(1, nDenseBlocks + 2)
-
+            point = np.random.randint(1, nDenseBlocks)
             offspring1 = np.concatenate((parent1[:, :point], parent2[:, point:]),
                                         axis=1)
             offspring2 = np.concatenate((parent2[:, :point], parent1[:, point:]),
                                         axis=1)
-            offspring1 = offspring1.tolist()
-            offspring2 = offspring2.tolist()
-        elif utils.crossover == 'row-col':
+
+        elif 0.33 < ran_num and ran_num < 0.66:
+            # one-point crossover col
             parent1 = np.array(new_population[p1 * self.number_blocks:(p1 + 1) * self.number_blocks])
             parent2 = np.array(new_population[p2 * self.number_blocks:(p2 + 1) * self.number_blocks])
 
-            row_point = random.randint(1, nDenseBlocks + 1)
-            col_point = random.randint(1, nDenseBlocks + 1)
+            point = np.random.randint(1, nDenseBlocks)
+            offspring1 = np.concatenate((parent1[:, :point, :], parent2[:, point:, :]),
+                                        axis=1)
+            offspring2 = np.concatenate((parent2[:, :point, :], parent1[:, point:, :]),
+                                        axis=1)
+
+        else:
+            parent1 = np.array(new_population[p1 * self.number_blocks:(p1 + 1) * self.number_blocks])
+            parent2 = np.array(new_population[p2 * self.number_blocks:(p2 + 1) * self.number_blocks])
+
+            row_point = np.random.randint(1, nDenseBlocks)
+            col_point = np.random.randint(1, nDenseBlocks)
 
             offspring1_part = np.concatenate((parent1[:, :row_point, :col_point], parent2[:, :row_point, col_point:]),
                                              axis=2)
@@ -132,32 +143,74 @@ class GA():
 
             offspring2 = np.concatenate((offspring2_part, offpsring2_part2), axis=1)
 
+        offspring1 = offspring1.tolist()
+        offspring2 = offspring2.tolist()
         return offspring1, offspring2
 
     def mutation(self, offspring1, offspring2, nDenseBlocks):
-        # random point bit-flip mutation
-        off1 = np.array(offspring1)
-        off2 = np.array(offspring2)
+        ran_num = np.random.rand()
+        if ran_num <= 0.33:
+            # random point bit-flip  mutation
+            off1 = np.array(offspring1)
+            off2 = np.array(offspring2)
 
-        row_index = random.randint(0, nDenseBlocks)
+            row_index = np.random.randint(0, nDenseBlocks)
 
-        col_index = random.randint(row_index + 1, nDenseBlocks + 1)
+            col_index = np.random.randint(row_index + 1, nDenseBlocks + 1)
 
-        for i in range(self.number_blocks):
-            if off1[i][row_index][col_index] == 0:
-                off1[i][row_index][col_index] = 1
-            else:
-                off1[i][row_index][col_index] = 0
-        for i in range(self.number_blocks):
-            if off2[i][row_index][col_index] == 0:
-                off2[i][row_index][col_index] = 1
-            else:
-                off2[i][row_index][col_index] = 0
+            for i in range(self.number_blocks):
+                if off1[i][row_index][col_index] == 0:
+                    off1[i][row_index][col_index] = 1
+                else:
+                    off1[i][row_index][col_index] = 0
+            for i in range(self.number_blocks):
+                if off2[i][row_index][col_index] == 0:
+                    off2[i][row_index][col_index] = 1
+                else:
+                    off2[i][row_index][col_index] = 0
+
+        elif 0.33 < ran_num and ran_num < 0.66:
+            # bit-flipping row
+            off1 = np.array(offspring1)
+            off2 = np.array(offspring2)
+
+            row_index = np.random.randint(0, nDenseBlocks+1)
+            for i in range(self.number_blocks):
+                copy_off1 = off1[i][row_index][:]
+                copy_off2 = off2[i][row_index][:]
+                for j in range(row_index+1, nDenseBlocks):
+                    copy_off1[j] = 1 - off1[i][row_index][j]
+                    copy_off2[j] = 1 - off2[i][row_index][j]
+                off1[i][row_index][:] = copy_off1[:]
+                off2[i][row_index][:] = copy_off2[:]
+        else:
+            # bit-flipping col
+            off1 = np.array(offspring1)
+            off2 = np.array(offspring2)
+
+            col_index = np.random.randint(2, nDenseBlocks + 1)
+            for i in range(self.number_blocks):
+                copy_off1 = off1[i][:, col_index]
+                copy_off2 = off2[i][:, col_index]
+                for j in range(col_index):
+                    copy_off1[j] = 1 - off1[i][j, col_index]
+                    copy_off2[j] = 1 - off2[i][j, col_index]
+                off1[i][:, col_index] = copy_off1[:]
+                off2[i][:, col_index] = copy_off2[:]
+
 
         offspring1 = off1.tolist()
         offspring2 = off2.tolist()
 
         return offspring1, offspring2
+    def surrogate(self, label, df):
+        surrogate_trainset = pd.concat([df, label], axis=1)
+        X, y = surrogate_trainset.iloc[:, :-1], surrogate_trainset.iloc[:, -1]
+        predictor = DecisionTreeRegressor()
+        start = time.process_time()
+        predictor.fit(X, y)
+        utils.print_and_log(logger, "Time taken by surrogate to train the model {}".format(time.process_time() - start))
+        return predictor
 
     def evolve(self):
         if not os.path.exists('./models'): os.mkdir('./models')
@@ -166,59 +219,40 @@ class GA():
         nDenseBlocks = (self.nDenseBlock - 4) // 3
         if self.Bottleneck:
             nDenseBlocks //= 2
-        # initialization
 
         population = self.create_init_pop(nDenseBlocks)
-        graph = np.array(population)
-        np.save('train_data' + str(utils.generation) + "_" + str(utils.prob) + "_" + str(utils.dataset) +'.npy', graph)
-        # for row in population:
-        #     print(row)
+
         idx = []
         for p in range(self.pop_size * 3):
             idx.append(self.chk(nDenseBlocks, population[p]))
-        # print("idx = ", idx)
+
         trainloader, testloader, classes = dataloader.GAdataloader()
         acc = []
-        # params = []
-
-        for i in range(1, self.pop_size + 1):
+        dataset = []
+        train_rate = 0.1
+        for i in range(1, self.pop_size):
             net = DenseNet(growthRate=utils.growthRate, depth=utils.depth, reduction=utils.reduction,
                            bottleneck=utils.bottleneck, nClasses=utils.nClasses,
                            matrix=population[(i - 1) * self.number_blocks:i * self.number_blocks],
                            idx=idx[(i - 1) * self.number_blocks:i * self.number_blocks]).to(
                 device=utils.device)
-            # d = torch.empty(64,3,32,32, dtype=torch.float32).to(utils.device)
-            # torch.onnx.export(net, d, 'initialization.onnx')
-
             net, loss = GAtrain(net, trainloader, utils.GA_epoch, utils.device)
-            # accuracy = test(net, testloader, utils.device)
-
             acc.append(loss)
-            # params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
+            matrix = np.array(population[(i - 1) * self.number_blocks:i * self.number_blocks])
+            new_train_matrix = matrix.ravel()
+            dataset.append(new_train_matrix)
 
-        utils.print_and_log(logger, "prob = {} loss = {}".format(self.prob, acc))
-        # utils.print_and_log(logger, "# params = {}".format(params))
-        # utils.print_and_log(logger, "params = {}".format(params))
-        fitness = acc  # self.fitness(acc, params)
-        # second_fitness = params
-        # plt.scatter(fitness, second_fitness, marker='o', color='blue')
-        # plt.xlabel('Error rate')
-        # plt.ylabel('# params')
-        # plt.show()
-        # utils.print_and_log(logger, "prob = {} fitness = {}".format(self.prob, fitness))
-
-        surrogate_data = np.load('./train_data' + str(utils.generation) + "_" + str(utils.prob) + "_" + str(utils.dataset) +'.npy')
-        dataset = []
-        for i in range(utils.number_population):
-            dataset.append(surrogate_data[i*self.number_blocks:(i+1)*self.number_blocks].ravel())
         surrogate_data_df = pd.DataFrame(dataset)
         surrogate_label = pd.DataFrame(acc)
-        surrogate_trainset = pd.concat([surrogate_data_df, surrogate_label], axis=1)
-        X, y = surrogate_trainset.iloc[:, :-1], surrogate_trainset.iloc[:, -1]
-        predictor = GradientBoostingRegressor()
-        start = time.process_time()
-        predictor.fit(X, y)
-        utils.print_and_log(logger, "Time taken by surrogate to train the model {}".format(time.process_time() - start))
+        predictor = self.surrogate(surrogate_label, surrogate_data_df)
+
+        # for n in range(int(self.pop_size * train_rate), self.pop_size):
+        #     matrix = np.array(population[(n - 1) * self.number_blocks:n * self.number_blocks])
+        #     test_matrix = matrix.ravel().reshape(1, -1)
+        #     accuracy = predictor.predict(test_matrix)
+        #     acc.append(accuracy[0])
+        utils.print_and_log(logger, "loss = {}".format(acc))
+        fitness = acc
 
 
         new_population = population
@@ -228,29 +262,31 @@ class GA():
             for n in range(self.pop_size // 2):
                 offspring1 = []
                 offspring2 = []
-                parents, selected_number = self.selection(selected_number)
-                crossover_rand = random.random()
+                seed = np.random.rand()
+                parents, selected_number = self.selection(selected_number, seed)
+                crossover_rand = np.random.rand()
                 if crossover_rand <= utils.crossover_rate:
                     offspring1, offspring2 = self.crossover(parents[0], parents[1], new_population, nDenseBlocks)
-                    mutate_rand = random.random()
+                    mutate_rand = np.random.rand()
                     if mutate_rand <= utils.mutation_rate:
                         offspring1, offspring2 = self.mutation(offspring1, offspring2, nDenseBlocks)
-                offspring1 = self.chk_diagonal(nDenseBlocks, offspring1)
-                offspring2 = self.chk_diagonal(nDenseBlocks, offspring2)
-                new_population.extend(offspring1)
-                new_population.extend(offspring2)
+                    offspring1 = self.chk_diagonal(nDenseBlocks, offspring1)
+                    offspring2 = self.chk_diagonal(nDenseBlocks, offspring2)
+                    new_population.extend(offspring1)
+                    new_population.extend(offspring2)
+                else:
+                    pass
             for p in range(self.pop_size + 1, len(new_population)):
                 idx.append(self.chk(nDenseBlocks, new_population[p]))
-            # print("idx = ", idx)
 
-            do_GAtrain = int(self.pop_size*0.1)
+            do_GAtrain = int(self.pop_size*train_rate)
 
-            for m in range(self.pop_size, self.pop_size * 2):
-                net = DenseNet(growthRate=utils.growthRate, depth=utils.depth, reduction=utils.reduction,
-                               bottleneck=True, nClasses=utils.nClasses,
-                               matrix=new_population[(m - 1) * self.number_blocks:m * self.number_blocks],
-                               idx=idx[(m - 1) * self.number_blocks:m * self.number_blocks]).to(
-                    device=utils.device)
+            for m in range(self.pop_size, len(new_population)):
+                # net = DenseNet(growthRate=utils.growthRate, depth=utils.depth, reduction=utils.reduction,
+                #                bottleneck=utils.bottleneck, nClasses=utils.nClasses,
+                #                matrix=new_population[(m - 1) * self.number_blocks:m * self.number_blocks],
+                #                idx=idx[(m - 1) * self.number_blocks:m * self.number_blocks]).to(
+                #     device=utils.device)
                 matrix = np.array(new_population[(m - 1) * self.number_blocks:m * self.number_blocks])
                 test_matrix = matrix.ravel().reshape(1, -1)
                 accuracy = predictor.predict(test_matrix)
@@ -261,47 +297,35 @@ class GA():
             add_label = []
             for do in range(do_GAtrain):
                 net = DenseNet(growthRate=utils.growthRate, depth=utils.depth, reduction=utils.reduction,
-                               bottleneck=True, nClasses=utils.nClasses,
+                               bottleneck=utils.bottleneck, nClasses=utils.nClasses,
                                matrix=new_population[((self.pop_size+top4_chd[do]) - 1) * self.number_blocks:(self.pop_size+top4_chd[do]) * self.number_blocks],
                                idx=idx[((self.pop_size+top4_chd[do]) - 1) * self.number_blocks:(self.pop_size+top4_chd[do]) * self.number_blocks]).to(
                     device=utils.device)
                 net, loss = GAtrain(net, trainloader, utils.GA_epoch, utils.device)
-                # accuracy = test(net, testloader, utils.device)
                 acc[self.pop_size+top4_chd[do]] = loss
                 add_label.append(loss)
-                # # params.append(sum(p.numel() for p in net.parameters() if p.requires_grad))
 
                 matrix = np.array(new_population[((self.pop_size+top4_chd[do]) - 1) * self.number_blocks:(self.pop_size+top4_chd[do]) * self.number_blocks])
                 new_train_matrix = matrix.ravel()
                 dataset.append(new_train_matrix)
-            new_surrogate_data = pd.DataFrame(dataset)
+
+            surrogate_data_df = pd.DataFrame(dataset)
             new_label = pd.DataFrame(add_label)
             surrogate_label = pd.concat([surrogate_label, new_label], axis=0, ignore_index=True)
-            new_surrogate_trainset = pd.concat([new_surrogate_data, surrogate_label], axis=1)
-            X, y = new_surrogate_trainset.iloc[:, :-1], new_surrogate_trainset.iloc[:, -1]
-            start = time.process_time()
-            predictor.fit(X, y)
-            utils.print_and_log(logger, "Time taken by surrogate to train the model {}".format(time.process_time() - start))
+            predictor = self.surrogate(surrogate_label, surrogate_data_df)
 
-            utils.print_and_log(logger, "prob = {} loss = {}".format(self.prob, acc))
-            # utils.print_and_log(logger, "# params = {}".format(params))
-            # utils.print_and_log(logger, "params : {}".format(params))
-            fitness = acc  # self.fitness(acc, params)
-            # second_fitness = params
+            utils.print_and_log(logger, "loss = {}".format(acc))
+            fitness = acc
 
             parents_population = new_population[:self.pop_size * self.number_blocks]
             parents_fitness = fitness[:self.pop_size]
-            # parents_second_fitness = second_fitness[:self.pop_size]
             idx_parents = idx[:self.pop_size * self.number_blocks]
             parents_acc = acc[:self.pop_size]
-            # parents_params = params[:self.pop_size]
 
             offspring_population = new_population[self.pop_size * self.number_blocks:]
             offspring_fitness = fitness[self.pop_size:]
-            # offspring_second_fitness = second_fitness[:self.pop_size]
             idx_offspring = idx[self.pop_size * self.number_blocks:]
             offspring_acc = acc[self.pop_size:]
-            # offspring_params = params[self.pop_size:]
 
             parent_rank = np.argsort(parents_fitness)
             parents_population_rank = []
@@ -368,7 +392,7 @@ class GA():
                        idx=idx[0:self.number_blocks]).to(
             device=utils.device)
         print(net)
-        torch.save(net, './models/model{:%Y%m%d}_{}_{}.pt'.format(datetime.datetime.now(), self.prob,
+        torch.save(net, './models/model{:%Y%m%d}_{}.pt'.format(datetime.datetime.now(),
                                                                   str(utils.augmentation)))
         utils.print_and_log(logger, "# Params = {}".format(sum(p.numel() for p in net.parameters() if p.requires_grad)))
         utils.print_and_log(logger, "Finish")
