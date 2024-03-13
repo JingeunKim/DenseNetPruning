@@ -236,7 +236,7 @@ class GA():
                            matrix=population[(i - 1) * self.number_blocks:i * self.number_blocks],
                            idx=idx[(i - 1) * self.number_blocks:i * self.number_blocks]).to(
                 device=utils.device)
-            net, loss = GAtrain(net, trainloader, utils.GA_epoch, utils.device)
+            net, loss = net, 0.1#GAtrain(net, trainloader, utils.GA_epoch, utils.device)
             acc.append(loss)
             matrix = np.array(population[(i - 1) * self.number_blocks:i * self.number_blocks])
             new_train_matrix = matrix.ravel()
@@ -259,7 +259,7 @@ class GA():
         for generation in range(self.generations):
             utils.print_and_log(logger, "-----" + str(generation + 1) + " generation------")
             selected_number = list(range(self.pop_size))
-            for n in range(self.pop_size // 2):
+            for n in range(len(new_population)//3//2):
                 offspring1 = []
                 offspring2 = []
                 seed = np.random.rand()
@@ -280,13 +280,7 @@ class GA():
                 idx.append(self.chk(nDenseBlocks, new_population[p]))
 
             do_GAtrain = int(self.pop_size*train_rate)
-
-            for m in range(self.pop_size, len(new_population)):
-                # net = DenseNet(growthRate=utils.growthRate, depth=utils.depth, reduction=utils.reduction,
-                #                bottleneck=utils.bottleneck, nClasses=utils.nClasses,
-                #                matrix=new_population[(m - 1) * self.number_blocks:m * self.number_blocks],
-                #                idx=idx[(m - 1) * self.number_blocks:m * self.number_blocks]).to(
-                #     device=utils.device)
+            for m in range(self.pop_size, len(new_population)//3):
                 matrix = np.array(new_population[(m - 1) * self.number_blocks:m * self.number_blocks])
                 test_matrix = matrix.ravel().reshape(1, -1)
                 accuracy = predictor.predict(test_matrix)
