@@ -4,10 +4,10 @@ import datetime
 device = 'cuda'
 dataset = 'cifar-10'
 
-GA_epoch = 30
+GA_epoch = 10
 crossover_rate = 0.9
 mutation_rate = 0.05
-generation = 60
+generation = 50
 number_population = 40
 prob = 0.6
 

@@ -236,7 +236,7 @@ class GA():
                            matrix=population[(i - 1) * self.number_blocks:i * self.number_blocks],
                            idx=idx[(i - 1) * self.number_blocks:i * self.number_blocks]).to(
                 device=utils.device)
-            net, loss = net, 0.1#GAtrain(net, trainloader, utils.GA_epoch, utils.device)
+            net, loss = GAtrain(net, trainloader, utils.GA_epoch, utils.device)
             acc.append(loss)
             matrix = np.array(population[(i - 1) * self.number_blocks:i * self.number_blocks])
             new_train_matrix = matrix.ravel()

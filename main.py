@@ -28,7 +28,8 @@ utils.print_and_log(logger, "Best model # params =  {}".format(num_params))
 trainloader, testloader, classes = dataloader.dataloader()
 model, best_error = train.train(model, trainloader, utils.epochs, utils.device, testloader)
 # acc = test.test(testloader, model, utils.device)
-torch.save(model, './models/model_trained_{:%Y%m%d}_{}.pt'.format(datetime.datetime.now(),
-                                                                  str(utils.augmentation)))
 utils.print_and_log(logger, "Best model error rate =  {}%".format(best_error))
 utils.print_and_log(logger, "END")
+torch.save(model, './models/model_trained_{:%Y%m%d}_{}.pt'.format(datetime.datetime.now(),
+                                                                  str(utils.augmentation)))
+utils.print_and_log(logger, "Model saved")

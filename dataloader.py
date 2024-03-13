@@ -75,7 +75,7 @@ def GAdataloader():
             transforms.ToTensor(),
             normalize])
 
-    val_rate = 0.8
+    val_rate = 0.9
     batch_size = 64
     num_workers = utils.num_workers
     if utils.dataset == 'cifar-10':
@@ -85,6 +85,7 @@ def GAdataloader():
         indices = list(range(len_trainset))
         split_point = int(np.floor(len_trainset * val_rate))
         train_idx, valid_idx = indices[split_point:], indices[:split_point]
+
         train_sampler = SubsetRandomSampler(train_idx)
         valid_sampler = SubsetRandomSampler(valid_idx)
         trainloader = torch.utils.data.DataLoader(
