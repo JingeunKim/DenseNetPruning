@@ -8,7 +8,7 @@ import numpy as np
 import torch
 import os
 import datetime
-from utils import logger
+from utils import logger, arg
 import multiprocessing as mp
 import joblib
 import pandas as pd
@@ -20,15 +20,15 @@ import matplotlib.pyplot as plt
 
 class GA():
     def __init__(self, nDenseBlock, Bottleneck):
-        self.pop_size = utils.number_population
-        self.generations = utils.generation
+        self.pop_size = arg.number_population
+        self.generations = arg.generation
         self.nDenseBlock = nDenseBlock
         self.Bottleneck = Bottleneck
         # self.prob = utils.prob
         self.number_blocks = 3
 
         utils.print_and_log(logger,
-                            "GA start generation : " + str(self.generations) + " BC = " + str(utils.bottleneck) + " population : " + str(self.pop_size))
+                            "GA start generation : " + str(self.generations) + " BC = " + str(arg.bottleneck) + " population : " + str(self.pop_size))
 
     def create_init_pop(self, nb_layers):
         population = []
@@ -57,7 +57,7 @@ class GA():
         for i in range(nb_layers - 1):
             matrix[i][i + 1] = 1
 
-        one_prob = [0.9, 0.85, 0.80, 0.75, 0.70, 0.65, 0.60, 0.55, 0.50]
+        one_prob = [0.9, 0.85, 0.80, 0.75, 0.70, 0.65, 0.60]
         for i in range(nb_layers):
             for j in range(i + 2, nb_layers):
                 prob = random.random()
@@ -231,12 +231,12 @@ class GA():
         dataset = []
         train_rate = 0.1
         for i in range(1, self.pop_size):
-            net = DenseNet(growthRate=utils.growthRate, depth=utils.depth, reduction=utils.reduction,
-                           bottleneck=utils.bottleneck, nClasses=utils.nClasses,
+            net = DenseNet(growthRate=arg.growthRate, depth=arg.depth, reduction=arg.reduction,
+                           bottleneck=arg.bottleneck, nClasses=arg.nClasses,
                            matrix=population[(i - 1) * self.number_blocks:i * self.number_blocks],
                            idx=idx[(i - 1) * self.number_blocks:i * self.number_blocks]).to(
-                device=utils.device)
-            net, loss = GAtrain(net, trainloader, utils.GA_epoch, utils.device)
+                device=arg.device)
+            net, loss = GAtrain(net, trainloader, arg.GA_epoch, arg.device)
             acc.append(loss)
             matrix = np.array(population[(i - 1) * self.number_blocks:i * self.number_blocks])
             new_train_matrix = matrix.ravel()
@@ -258,24 +258,21 @@ class GA():
         new_population = population
         for generation in range(self.generations):
             utils.print_and_log(logger, "-----" + str(generation + 1) + " generation------")
-            selected_number = list(range(self.pop_size))
+            selected_number = list(range(len(new_population)//3))
             for n in range(len(new_population)//3//2):
                 offspring1 = []
                 offspring2 = []
                 seed = np.random.rand()
                 parents, selected_number = self.selection(selected_number, seed)
-                crossover_rand = np.random.rand()
-                if crossover_rand <= utils.crossover_rate:
-                    offspring1, offspring2 = self.crossover(parents[0], parents[1], new_population, nDenseBlocks)
-                    mutate_rand = np.random.rand()
-                    if mutate_rand <= utils.mutation_rate:
-                        offspring1, offspring2 = self.mutation(offspring1, offspring2, nDenseBlocks)
-                    offspring1 = self.chk_diagonal(nDenseBlocks, offspring1)
-                    offspring2 = self.chk_diagonal(nDenseBlocks, offspring2)
-                    new_population.extend(offspring1)
-                    new_population.extend(offspring2)
-                else:
-                    pass
+                offspring1, offspring2 = self.crossover(parents[0], parents[1], new_population, nDenseBlocks)
+                mutate_rand = np.random.rand()
+                if mutate_rand <= arg.mutation_rate:
+                    offspring1, offspring2 = self.mutation(offspring1, offspring2, nDenseBlocks)
+                offspring1 = self.chk_diagonal(nDenseBlocks, offspring1)
+                offspring2 = self.chk_diagonal(nDenseBlocks, offspring2)
+                new_population.extend(offspring1)
+                new_population.extend(offspring2)
+
             for p in range(self.pop_size + 1, len(new_population)):
                 idx.append(self.chk(nDenseBlocks, new_population[p]))
 
@@ -290,12 +287,12 @@ class GA():
             top4_chd = [index for index, value in top4_chd[:do_GAtrain]]
             add_label = []
             for do in range(do_GAtrain):
-                net = DenseNet(growthRate=utils.growthRate, depth=utils.depth, reduction=utils.reduction,
-                               bottleneck=utils.bottleneck, nClasses=utils.nClasses,
+                net = DenseNet(growthRate=arg.growthRate, depth=arg.depth, reduction=arg.reduction,
+                               bottleneck=arg.bottleneck, nClasses=arg.nClasses,
                                matrix=new_population[((self.pop_size+top4_chd[do]) - 1) * self.number_blocks:(self.pop_size+top4_chd[do]) * self.number_blocks],
                                idx=idx[((self.pop_size+top4_chd[do]) - 1) * self.number_blocks:(self.pop_size+top4_chd[do]) * self.number_blocks]).to(
-                    device=utils.device)
-                net, loss = GAtrain(net, trainloader, utils.GA_epoch, utils.device)
+                    device=arg.device)
+                net, loss = GAtrain(net, trainloader, arg.GA_epoch, arg.device)
                 acc[self.pop_size+top4_chd[do]] = loss
                 add_label.append(loss)
 
@@ -344,7 +341,7 @@ class GA():
             offspring_acc = [offspring_acc[i] for i in offspring_rank]
             # offspring_params = [offspring_params[i] for i in offspring_rank]
 
-            elite_rate = utils.elitism
+            elite_rate = arg.elitism
             parents_population = parents_population_rank[:int(self.pop_size * elite_rate) * self.number_blocks]
             parents_fitness = parents_fitness[:int(self.pop_size * elite_rate)]
             # parents_second_fitness = parents_second_fitness[:int(self.pop_size * elite_rate)]
@@ -357,8 +354,8 @@ class GA():
             # offspring_second_fitness = offspring_second_fitness[:int(self.pop_size * (1 - elite_rate))]
             idx_offspring = idx_offspring_rank[:int(self.pop_size * (1 - elite_rate)) * self.number_blocks]
             offspring_acc = offspring_acc[:int(self.pop_size * (1 - elite_rate))]
-            # offspring_params = offspring_params[:int(self.pop_size*elite_rate)]
 
+            # offspring_params = offspring_params[:int(self.pop_size*elite_rate)]
             new_population = parents_population + offspring_population  # np.concatenate((parents_population, offspring_population), axis=0)
             fitness = parents_fitness + offspring_fitness
             # second_fitness = parents_second_fitness + offspring_second_fitness
@@ -378,15 +375,16 @@ class GA():
             population_rank.extend(new_population[(i - 1) * self.number_blocks:i * self.number_blocks])
             idx_rank.extend(idx[(i - 1) * self.number_blocks:i * self.number_blocks])
 
-        idx = idx[:self.number_blocks]
-        best_model = new_population[:self.number_blocks]
+        idx = idx_rank[:self.number_blocks]
+        best_model = population_rank[:self.number_blocks]
 
-        net = DenseNet(growthRate=12, depth=100, reduction=0.5, bottleneck=True, nClasses=utils.nClasses,
+        net = DenseNet(growthRate=arg.growthRate, depth=arg.depth, reduction=arg.reduction,
+                               bottleneck=arg.bottleneck, nClasses=arg.nClasses,
                        matrix=best_model[0:self.number_blocks],
                        idx=idx[0:self.number_blocks]).to(
-            device=utils.device)
+            device=arg.device)
         print(net)
         torch.save(net, './models/model{:%Y%m%d}_{}.pt'.format(datetime.datetime.now(),
-                                                                  str(utils.augmentation)))
+                                                                  str(arg.augmentation)))
         utils.print_and_log(logger, "# Params = {}".format(sum(p.numel() for p in net.parameters() if p.requires_grad)))
         utils.print_and_log(logger, "Finish")

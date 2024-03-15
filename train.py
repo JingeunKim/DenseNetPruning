@@ -2,6 +2,7 @@ import torch.optim as optim
 from torch import nn
 from tqdm import tqdm
 import utils
+from utils import arg
 import time
 import test
 # def train(train_loader, model, criterion, optimizer, epoch):
@@ -9,7 +10,7 @@ def train(net, trainloader, epochs, device, testloader):
     """Train for one epoch on the training set"""
     print("train phase")
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=utils.lr, weight_decay=utils.weight_decay, nesterov=True, momentum=utils.momentum)
+    optimizer = optim.SGD(net.parameters(), lr=arg.lr, weight_decay=arg.weight_decay, nesterov=True, momentum=arg.momentum)
     best_error = 100
     for epoch in range(epochs):
         adjust_learning_rate(optimizer, epoch)
@@ -30,7 +31,7 @@ def train(net, trainloader, epochs, device, testloader):
             running_loss += loss.item()
             bar.set_postfix(loss=loss.item())
         # print("running_loss = ", loss.item())
-        error_rate = test.test(testloader, net, utils.device)
+        error_rate = test.test(testloader, net, arg.device)
         if best_error > error_rate:
             best_error = error_rate
         print('best_error :', best_error)
@@ -40,7 +41,7 @@ def train(net, trainloader, epochs, device, testloader):
 
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 after 150 and 225 epochs"""
-    lr = utils.lr * (0.1 ** (epoch // 150)) * (0.1 ** (epoch // 225))
+    lr = arg.lr * (0.1 ** (epoch // 150)) * (0.1 ** (epoch // 225))
     # log to TensorBoard
     # if args.tensorboard:
     # print('learning_rate', lr, epoch)
@@ -88,8 +89,8 @@ def accuracy(output, target, topk=(1,)):
 def GAtrain(model, train_loader, epochs, device):
     print("GAtrain")
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=utils.lr, weight_decay=utils.weight_decay, nesterov=True,
-                          momentum=utils.momentum)
+    optimizer = optim.SGD(model.parameters(), lr=arg.lr, weight_decay=arg.weight_decay, nesterov=True,
+                          momentum=arg.momentum)
     # switch to train mode
     model.train()
     for epoch in range(epochs):

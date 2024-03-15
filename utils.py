@@ -1,45 +1,33 @@
+import argparse
 import logging
 import datetime
 
-device = 'cuda'
-dataset = 'cifar-10'
-
-GA_epoch = 10
-crossover_rate = 0.9
-mutation_rate = 0.05
-generation = 50
-number_population = 40
-prob = 0.6
-
-crossover = 'row-col'
-elitism = 0.2
-
-num_workers = 4
-lr = 1e-1
-weight_decay = 1e-4
-momentum = 0.9
-epochs = 300
-
-growthRate = 12
-depth = 100
-reduction = 0.5
-bottleneck = True
-if dataset == 'cifar-10':
-    nClasses = 10
-elif dataset == 'cifar-100':
-    nClasses = 100
-
-augmentation = True
-
-if augmentation != False:
-    pass
-else:
-    dropout = 0.2
-
-
+parser = argparse.ArgumentParser(description="parameter of SMA-GA")
+parser.add_argument("--device", type=str, default="cuda", help="type of gpu")
+parser.add_argument("--dataset", type=str, default="cifar-10", help="cifar-10 or cifar-100")
+parser.add_argument("--GA_epoch", type=int, default=10, help="number of epochs in GA")
+parser.add_argument("--crossover_rate", type=float, default=1, help="probability of crossover")
+parser.add_argument("--mutation_rate", type=float, default=0.05, help="probability of mutation")
+parser.add_argument("--generation", type=int, default=60, help="number of generation")
+parser.add_argument("--number_population", type=int, default=40, help="number_population")
+parser.add_argument("--elitism", type=float, default=0.2, help="elitism rate")
+parser.add_argument("--num_workers", type=int, default=4, help="num_workers")
+parser.add_argument("--lr", type=float, default=1e-1, help="learning rate")
+parser.add_argument("--weight_decay", type=float, default=1e-4, help="weight_decay")
+parser.add_argument("--momentum", type=float, default=0.9, help="momentum")
+parser.add_argument("--epochs", type=int, default=300, help="epochs")
+parser.add_argument("--growthRate", type=int, default=12, help="growthRate")
+parser.add_argument("--depth", type=int, default=100, help="depth")
+parser.add_argument("--reduction", type=float, default=0.5, help="reduction")
+parser.add_argument("--bottleneck", type=bool, default=True, help="bottleneck")
+parser.add_argument("--nClasses", type=int, default=10, help="number of classes")
+parser.add_argument("--augmentation", type=bool, default=True, help="augmentation")
+parser.add_argument("--dropout", type=float, default=0., help="set 0.2 if you do not data aumentation")
+arg = parser.parse_args()
+print(arg)
 def setup_logger():
     logger = logging.getLogger()
-    log_path = './logs/{:%Y%m%d}_{}.log'.format(datetime.datetime.now(), dataset)
+    log_path = './logs/{:%Y%m%d}_{}.log'.format(datetime.datetime.now(), arg.dataset)
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter(fmt='%(asctime)s: %(message)s', datefmt='%H:%M:%S')
     fh = logging.FileHandler(log_path)
@@ -49,7 +37,7 @@ def setup_logger():
 
 def bench_setup_logger():
     logger = logging.getLogger()
-    log_path = './bench_logs/{:%Y%m%d}_{}.log'.format(datetime.datetime.now(), dataset)
+    log_path = './bench_logs/{:%Y%m%d}_{}.log'.format(datetime.datetime.now(), arg.dataset)
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter(fmt='%(asctime)s: %(message)s', datefmt='%H:%M:%S')
     fh = logging.FileHandler(log_path)

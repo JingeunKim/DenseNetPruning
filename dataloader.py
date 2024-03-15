@@ -3,17 +3,17 @@ import torchvision
 import torchvision.transforms as transforms
 import utils
 import numpy as np
-
+from utils import arg
 from torch.utils.data import SubsetRandomSampler
 def dataloader():
-    if utils.dataset =='cifar-10':
+    if arg.dataset =='cifar-10':
         normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
                                          std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
-    elif utils.dataset =='cifar-100':
+    elif arg.dataset =='cifar-100':
         normalize = transforms.Normalize(mean=[x / 255.0 for x in [129.3, 124.1, 112.4]],
                                          std=[x / 255.0 for x in [68.2, 65.4, 70.4]])
 
-    if utils.augmentation:
+    if arg.augmentation:
         transform = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
@@ -29,9 +29,9 @@ def dataloader():
         normalize
     ])
     batch_size = 64
-    num_workers = utils.num_workers
+    num_workers = arg.num_workers
 
-    if utils.dataset == 'cifar-10':
+    if arg.dataset == 'cifar-10':
         trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
                                                 download=True, transform=transform)
 
@@ -39,7 +39,7 @@ def dataloader():
                                                download=True, transform=transform_test)
         classes = 10
 
-    elif utils.dataset == 'cifar-100':
+    elif arg.dataset == 'cifar-100':
         trainset = torchvision.datasets.CIFAR100(root='./data', train=True,
                                                 download=True, transform=transform)
 
@@ -58,13 +58,13 @@ def dataloader():
 
 
 def GAdataloader():
-    if utils.dataset =='cifar-10':
+    if arg.dataset =='cifar-10':
         normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
                                          std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
-    elif utils.dataset =='cifar-100':
+    elif arg.dataset =='cifar-100':
         normalize = transforms.Normalize(mean=[x / 255.0 for x in [129.3, 124.1, 112.4]],
                                          std=[x / 255.0 for x in [68.2, 65.4, 70.4]])
-    if utils.augmentation:
+    if arg.augmentation:
         transform = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
@@ -77,8 +77,8 @@ def GAdataloader():
 
     val_rate = 0.9
     batch_size = 64
-    num_workers = utils.num_workers
-    if utils.dataset == 'cifar-10':
+    num_workers = arg.num_workers
+    if arg.dataset == 'cifar-10':
         train_set = torchvision.datasets.CIFAR10(root='./data', train=True,
                                                  download=True, transform=transform)
         len_trainset = len(train_set)

@@ -15,7 +15,7 @@ import torchvision.models as models
 import sys
 import math
 import random
-
+from utils import arg
 import utils
 
 "https://github.com/bamos/densenet.pytorch/blob/master/densenet.py"
@@ -73,7 +73,7 @@ class DenseBlock(nn.Module):
                     if a == 0:
                         self.nChannels_copy -= nChannels
                     else:
-                        self.nChannels_copy -= utils.growthRate
+                        self.nChannels_copy -= arg.growthRate
             interChannels = 4 * self.growthRate
             self.layers += [nn.BatchNorm2d(self.nChannels_copy),
                             nn.ReLU(inplace=True),

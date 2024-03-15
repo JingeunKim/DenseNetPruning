@@ -28,11 +28,11 @@ parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
 parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
 parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
                     help='weight decay (default: 1e-4)')
-parser.add_argument('--print-freq', '-p', default=10, type=int,
+parser.add_argument('--print-freq', '-p', default=700, type=int,
                     help='print frequency (default: 10)')
-parser.add_argument('--layers', default=100, type=int,
+parser.add_argument('--layers', default=250, type=int,
                     help='total number of layers (default: 100)')
-parser.add_argument('--growth', default=12, type=int,
+parser.add_argument('--growth', default=24, type=int,
                     help='number of new channels per layer (default: 12)')
 parser.add_argument('--droprate', default=0, type=float,
                     help='dropout probability (default: 0.0)')
@@ -57,7 +57,6 @@ device = torch.device('cuda')
 
 def main():
     global args, best_prec1
-
     args = parser.parse_args()
     # if args.tensorboard: configure("runs/%s" % (args.name))
 
@@ -90,7 +89,7 @@ def main():
         datasets.CIFAR10('../data', train=False, transform=transform_test),
         batch_size=args.batch_size, shuffle=True, **kwargs)
     # create model
-    model = dn.DenseNet3(args.layers, 100, args.growth, reduction=args.reduce,
+    model = dn.DenseNet3(args.layers, 10, args.growth, reduction=args.reduce,
                          bottleneck=args.bottleneck, dropRate=args.droprate).to(device)
     print("model")
     print(model)
@@ -132,6 +131,7 @@ def main():
 
         # evaluate on validation set
         prec1 = validate(val_loader, model, criterion, epoch)
+        print("prec1 ", prec1)
 
         # remember best prec@1 and save checkpoint
         is_best = prec1 > best_prec1
@@ -177,7 +177,6 @@ def train(train_loader, model, criterion, optimizer, epoch):
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
-
         if i % args.print_freq == 0:
             print('Epoch: [{0}][{1}/{2}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
@@ -185,6 +184,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
                   'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
                 epoch, i, len(train_loader), batch_time=batch_time,
                 loss=losses, top1=top1))
+    print("loss ", loss)
     # log to TensorBoard
     # if args.tensorboard:
     #     log_value('train_loss', losses.avg, epoch)
