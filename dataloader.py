@@ -12,6 +12,11 @@ def dataloader():
     elif arg.dataset =='cifar-100':
         normalize = transforms.Normalize(mean=[x / 255.0 for x in [129.3, 124.1, 112.4]],
                                          std=[x / 255.0 for x in [68.2, 65.4, 70.4]])
+    elif arg.dataset =='shvn':
+        normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
+                                         std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
+    # 0.4376821, 0.4437697, 0.47280442), (0.19803012, 0.20101562, 0.19703614)
+# Normalize(mean=[0.4913725490196078, 0.4823529411764706, 0.4466666666666667], std=[0.24705882352941178, 0.24352941176470588, 0.2615686274509804])
 
     if arg.augmentation:
         transform = transforms.Compose([
@@ -47,13 +52,19 @@ def dataloader():
                                                download=True, transform=transform_test)
         classes=100
 
+    elif arg.dataset == 'shvn':
+        trainset = torchvision.datasets.SVHN(root='./data',
+                                                download=True, transform=transform)
+
+        testset = torchvision.datasets.SVHN(root='./data',
+                                               download=True, transform=transform_test)
+        classes=10
+
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                               shuffle=True, num_workers=num_workers)
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size,
                                              shuffle=False, num_workers=num_workers)
-    # 클래스들
-    # classes = ('plane', 'car', 'bird', 'cat',
-    #            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+
     return trainloader, testloader, classes
 
 
@@ -64,6 +75,9 @@ def GAdataloader():
     elif arg.dataset =='cifar-100':
         normalize = transforms.Normalize(mean=[x / 255.0 for x in [129.3, 124.1, 112.4]],
                                          std=[x / 255.0 for x in [68.2, 65.4, 70.4]])
+    elif arg.dataset =='shvn':
+        normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
+                                         std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
     if arg.augmentation:
         transform = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
@@ -97,7 +111,7 @@ def GAdataloader():
             num_workers=num_workers
         )
         classes = 10
-    else:
+    elif arg.dataset == 'cifar-100':
         train_set = torchvision.datasets.CIFAR100(root='./data', train=True,
                                                  download=True, transform=transform)
         len_trainset = len(train_set)
@@ -115,5 +129,23 @@ def GAdataloader():
             num_workers=num_workers
         )
         classes = 100
+    elif arg.dataset == 'shvn':
+        train_set = torchvision.datasets.SVHN(root='./data',
+                                                 download=True, transform=transform)
+        len_trainset = len(train_set)
+        indices = list(range(len_trainset))
+        split_point = int(np.floor(len_trainset * val_rate))
+        train_idx, valid_idx = indices[split_point:], indices[:split_point]
 
+        train_sampler = SubsetRandomSampler(train_idx)
+        valid_sampler = SubsetRandomSampler(valid_idx)
+        trainloader = torch.utils.data.DataLoader(
+            train_set, batch_size=batch_size, sampler=train_sampler,
+            num_workers=num_workers
+        )
+        testloader = torch.utils.data.DataLoader(
+            train_set, batch_size=batch_size, sampler=valid_sampler,
+            num_workers=num_workers
+        )
+        classes = 10
     return trainloader, testloader, classes

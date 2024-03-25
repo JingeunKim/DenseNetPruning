@@ -236,6 +236,9 @@ class GA():
                            matrix=population[(i - 1) * self.number_blocks:i * self.number_blocks],
                            idx=idx[(i - 1) * self.number_blocks:i * self.number_blocks]).to(
                 device=arg.device)
+            # print(net)
+            num_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
+            # print(num_params)
             net, loss = GAtrain(net, trainloader, arg.GA_epoch, arg.device)
             acc.append(loss)
             matrix = np.array(population[(i - 1) * self.number_blocks:i * self.number_blocks])

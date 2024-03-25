@@ -41,6 +41,9 @@ for run in range(5):
                                                                       str(arg.augmentation), str(run)))
     utils.print_and_log(logger, "Model saved")
 
+utils.print_and_log(logger, "all time =  {}".format(all_run))
 utils.print_and_log(logger, "avg time =  {}, std = {}%".format(sum(all_run)/len(all_run), np.std(all_run)))
+utils.print_and_log(logger, "error rate =  {}".format(all_acc))
 utils.print_and_log(logger, "avg error rate =  {}, std = {}%".format(sum(all_acc)/len(all_acc), np.std(all_acc)))
+utils.print_and_log(logger, "# params =  {}".format(all_params))
 utils.print_and_log(logger, "avg # params =  {}, std = {}%".format(sum(all_params)/len(all_params), np.std(all_params)))
