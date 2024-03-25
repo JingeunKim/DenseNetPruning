@@ -41,10 +41,13 @@ class Transition(nn.Module):
         self.conv1 = nn.Conv2d(nChannels, nOutChannels, kernel_size=1,
                                bias=False)
 
+        self.droprate = arg.dropout
+
     def forward(self, x):
         out = self.conv1(F.relu(self.bn1(x)))
-        out = F.avg_pool2d(out, 2)
-        return out
+        if self.droprate > 0:
+            out = F.dropout(out, p=self.droprate, inplace=False, training=self.training)
+        return F.avg_pool2d(out, 2)
 
 
 class DenseBlock(nn.Module):
@@ -75,13 +78,24 @@ class DenseBlock(nn.Module):
                     else:
                         self.nChannels_copy -= arg.growthRate
             interChannels = 4 * self.growthRate
-            self.layers += [nn.BatchNorm2d(self.nChannels_copy),
-                            nn.ReLU(inplace=True),
-                            nn.Conv2d(self.nChannels_copy, interChannels, kernel_size=1, bias=False),
-                            nn.BatchNorm2d(interChannels),
-                            nn.ReLU(inplace=True),
-                            nn.Conv2d(interChannels, self.growthRate, kernel_size=3, padding=1,
-                                      bias=False)]
+            if arg.dropout == 0:
+                self.layers += [nn.BatchNorm2d(self.nChannels_copy),
+                                nn.ReLU(inplace=True),
+                                nn.Conv2d(self.nChannels_copy, interChannels, kernel_size=1, bias=False),
+                                nn.BatchNorm2d(interChannels),
+                                nn.ReLU(inplace=True),
+                                nn.Conv2d(interChannels, self.growthRate, kernel_size=3, padding=1,
+                                          bias=False)]
+            if arg.dropout > 0:
+                self.layers += [nn.BatchNorm2d(self.nChannels_copy),
+                                nn.ReLU(inplace=True),
+                                nn.Conv2d(self.nChannels_copy, interChannels, kernel_size=1, bias=False),
+                                nn.Dropout(arg.dropout),
+                                nn.BatchNorm2d(interChannels),
+                                nn.ReLU(inplace=True),
+                                nn.Conv2d(interChannels, self.growthRate, kernel_size=3, padding=1,
+                                          bias=False),
+                                nn.Dropout(arg.dropout)]
             self.nChannels += self.growthRate
 
         self.dense = nn.Sequential(*self.layers)
@@ -90,26 +104,50 @@ class DenseBlock(nn.Module):
         return self.nChannels_copy + self.growthRate
 
     def forward(self, x):
-        for i in range(1, len(self.dense) // 6 + 1):
-            x_list = []
-            if i == 1:  # 0번째 블락은 그냥 통과
-                globals()["out{}".format(i - 1)] = self.dense[(i - 1) * 6:i * 6](x)
-                globals()["x{}".format(i)] = torch.cat([x, globals()["out{}".format(i - 1)]], 1)
-            else:
-                for q in self.idx[i]:
-                    if q == 0:
-                        x_list.append(x)
-                    else:
-                        x_list.append(globals()["out{}".format(q - 1)])
-                if len(x_list) == 0:
-                    print(x_list)
-                    print(self.idx[i])
-                globals()["x{}".format(i - 1)] = torch.cat(x_list, 1)
-                globals()["out{}".format(i - 1)] = self.dense[(i - 1) * 6:i * 6](globals()["x{}".format(i - 1)])
-                globals()["x{}".format(i)] = torch.cat(
-                    [globals()["x{}".format(i - 1)], globals()["out{}".format(i - 1)]], 1)
+        if arg.dropout == 0:
+            for i in range(1, len(self.dense) // 6 + 1):
+                x_list = []
+                if i == 1:  # 0번째 블락은 그냥 통과
+                    globals()["out{}".format(i - 1)] = self.dense[(i - 1) * 6:i * 6](x)
+                    globals()["x{}".format(i)] = torch.cat([x, globals()["out{}".format(i - 1)]], 1)
+                else:
+                    for q in self.idx[i]:
+                        if q == 0:
+                            x_list.append(x)
+                        else:
+                            x_list.append(globals()["out{}".format(q - 1)])
+                    if len(x_list) == 0:
+                        print(x_list)
+                        print(self.idx[i])
+                    globals()["x{}".format(i - 1)] = torch.cat(x_list, 1)
+                    globals()["out{}".format(i - 1)] = self.dense[(i - 1) * 6:i * 6](globals()["x{}".format(i - 1)])
 
-        return globals()["x{}".format(self.nDenseBlocks + 1)]
+                    globals()["x{}".format(i)] = torch.cat(
+                        [globals()["x{}".format(i - 1)], globals()["out{}".format(i - 1)]], 1)
+
+            return globals()["x{}".format(self.nDenseBlocks + 1)]
+        else:
+            for i in range(1, len(self.dense) // 8 + 1):
+                x_list = []
+                if i == 1:  # 0번째 블락은 그냥 통과
+                    globals()["out{}".format(i - 1)] = self.dense[(i - 1) * 8:i * 8](x)
+                    globals()["x{}".format(i)] = torch.cat([x, globals()["out{}".format(i - 1)]], 1)
+                else:
+                    for q in self.idx[i]:
+                        if q == 0:
+                            x_list.append(x)
+                        else:
+                            x_list.append(globals()["out{}".format(q - 1)])
+                    if len(x_list) == 0:
+                        print(x_list)
+                        print(self.idx[i])
+                    globals()["x{}".format(i - 1)] = torch.cat(x_list, 1)
+                    globals()["out{}".format(i - 1)] = self.dense[(i - 1) * 8:i * 8](globals()["x{}".format(i - 1)])
+
+                    globals()["x{}".format(i)] = torch.cat(
+                        [globals()["x{}".format(i - 1)], globals()["out{}".format(i - 1)]], 1)
+
+            return globals()["x{}".format(self.nDenseBlocks + 1)]
 
 
 

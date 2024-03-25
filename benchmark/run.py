@@ -30,9 +30,9 @@ parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
                     help='weight decay (default: 1e-4)')
 parser.add_argument('--print-freq', '-p', default=700, type=int,
                     help='print frequency (default: 10)')
-parser.add_argument('--layers', default=250, type=int,
+parser.add_argument('--layers', default=190, type=int,
                     help='total number of layers (default: 100)')
-parser.add_argument('--growth', default=24, type=int,
+parser.add_argument('--growth', default=40, type=int,
                     help='number of new channels per layer (default: 12)')
 parser.add_argument('--droprate', default=0, type=float,
                     help='dropout probability (default: 0.0)')

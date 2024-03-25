@@ -207,6 +207,7 @@ class GA():
         surrogate_trainset = pd.concat([df, label], axis=1)
         X, y = surrogate_trainset.iloc[:, :-1], surrogate_trainset.iloc[:, -1]
         predictor = DecisionTreeRegressor()
+        # predictor = GradientBoostingRegressor()
         start = time.process_time()
         predictor.fit(X, y)
         utils.print_and_log(logger, "Time taken by surrogate to train the model {}".format(time.process_time() - start))
@@ -236,7 +237,6 @@ class GA():
                            matrix=population[(i - 1) * self.number_blocks:i * self.number_blocks],
                            idx=idx[(i - 1) * self.number_blocks:i * self.number_blocks]).to(
                 device=arg.device)
-            # print(net)
             num_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
             # print(num_params)
             net, loss = GAtrain(net, trainloader, arg.GA_epoch, arg.device)

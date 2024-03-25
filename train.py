@@ -96,6 +96,8 @@ def GAtrain(model, train_loader, epochs, device):
     for epoch in range(epochs):
         # end = time.time()
         for i, (input, target) in enumerate(train_loader):
+            # print(input)
+            # print(target)
             target = target.to(device)
             input = input.to(device)
 
