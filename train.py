@@ -41,7 +41,11 @@ def train(net, trainloader, epochs, device, testloader):
 
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 after 150 and 225 epochs"""
-    lr = arg.lr * (0.1 ** (epoch // 150)) * (0.1 ** (epoch // 225))
+    if arg.dataset == 'cifar-10' or arg.dataset == 'cifar-100':
+        lr = arg.lr * (0.1 ** (epoch // 150)) * (0.1 ** (epoch // 225))
+    elif arg.dataset == 'shvn':
+        lr = arg.lr * (0.1 ** (epoch // 20)) * (0.1 ** (epoch // 30))
+
     # log to TensorBoard
     # if args.tensorboard:
     # print('learning_rate', lr, epoch)

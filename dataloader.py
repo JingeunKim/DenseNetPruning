@@ -9,12 +9,13 @@ def dataloader():
     if arg.dataset =='cifar-10':
         normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
                                          std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
+
     elif arg.dataset =='cifar-100':
         normalize = transforms.Normalize(mean=[x / 255.0 for x in [129.3, 124.1, 112.4]],
                                          std=[x / 255.0 for x in [68.2, 65.4, 70.4]])
     elif arg.dataset =='shvn':
-        normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
-                                         std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
+        normalize = transforms.Normalize(mean=[0.49139968, 0.48215841, 0.44653091],
+                                         std=[0.24703223, 0.24348513, 0.26158784])
 
     if arg.augmentation:
         transform = transforms.Compose([
@@ -74,8 +75,8 @@ def GAdataloader():
         normalize = transforms.Normalize(mean=[x / 255.0 for x in [129.3, 124.1, 112.4]],
                                          std=[x / 255.0 for x in [68.2, 65.4, 70.4]])
     elif arg.dataset =='shvn':
-        normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
-                                         std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
+        normalize = transforms.Normalize(mean=[0.49139968, 0.48215841, 0.44653091],
+                                         std=[0.24703223, 0.24348513, 0.26158784])
     if arg.augmentation:
         transform = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
