@@ -17,7 +17,7 @@ def dataloader():
         normalize = transforms.Normalize(mean=[0.49139968, 0.48215841, 0.44653091],
                                          std=[0.24703223, 0.24348513, 0.26158784])
 
-    if arg.augmentation:
+    if arg.augmentation == 'True':
         transform = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
@@ -77,7 +77,7 @@ def GAdataloader():
     elif arg.dataset =='shvn':
         normalize = transforms.Normalize(mean=[0.49139968, 0.48215841, 0.44653091],
                                          std=[0.24703223, 0.24348513, 0.26158784])
-    if arg.augmentation:
+    if arg.augmentation == 'True':
         transform = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
