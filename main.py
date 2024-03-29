@@ -1,5 +1,3 @@
-import shutil
-import test
 import utils
 import dataloader
 import torch
@@ -8,13 +6,12 @@ import datetime
 from utils import logger, arg
 import time
 import train
-import os
-import torch.nn as nn
-import torch.optim as optim
 import numpy as np
+import os
 all_run = []
 all_params = []
 all_acc = []
+if not os.path.exists('./best_model'): os.mkdir('./best_model')
 for run in range(5):
     start = time.time()
     utils.print_and_log(logger, "Data augmentation : {}".format(arg.augmentation))
@@ -37,7 +34,7 @@ for run in range(5):
     utils.print_and_log(logger, "Best model error rate =  {}%".format(best_error))
     all_acc.append(best_error)
     utils.print_and_log(logger, "END")
-    torch.save(model, './models/model_trained_{}_{}_{}.pt'.format(str(arg.dataset),
+    torch.save(model, './best_model/model_trained_{}_{}_{}.pt'.format(str(arg.dataset),
                                                                       str(arg.augmentation), str(run)))
     utils.print_and_log(logger, "Model saved")
 

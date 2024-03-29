@@ -32,12 +32,14 @@ def train(net, trainloader, epochs, device, testloader):
             bar.set_postfix(loss=loss.item())
         # print("running_loss = ", loss.item())
         error_rate = test.test(testloader, net, arg.device)
+
         if best_error > error_rate:
+            best_model = net
             best_error = error_rate
         print('best_error :', best_error)
     print()
     print('Finished Training')
-    return net, best_error
+    return best_model, best_error
 
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 after 150 and 225 epochs"""
