@@ -213,6 +213,8 @@ class GA():
         utils.print_and_log(logger, "Time taken by surrogate to train the model {}".format(time.process_time() - start))
         return predictor
 
+    def to_MB(self, a):
+        return a / 1024.0 / 1024.0
     def evolve(self):
         if not os.path.exists('./models'): os.mkdir('./models')
         if not os.path.exists('./logs'): os.mkdir('./logs')
@@ -237,17 +239,20 @@ class GA():
                            matrix=population[(i - 1) * self.number_blocks:i * self.number_blocks],
                            idx=idx[(i - 1) * self.number_blocks:i * self.number_blocks]).to(
                 device=arg.device)
-            num_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
-            # print(num_params)
+
+
+            # print(f"After model to device: {self.to_MB(torch.cuda.memory_allocated()):.2f}MB")
+            torch.cuda.empty_cache()
             net, loss = GAtrain(net, trainloader, arg.GA_epoch, arg.device)
             acc.append(loss)
             matrix = np.array(population[(i - 1) * self.number_blocks:i * self.number_blocks])
             new_train_matrix = matrix.ravel()
             dataset.append(new_train_matrix)
+        if arg.surrogate == "True":
+            surrogate_data_df = pd.DataFrame(dataset)
+            surrogate_label = pd.DataFrame(acc)
+            predictor = self.surrogate(surrogate_label, surrogate_data_df)
 
-        surrogate_data_df = pd.DataFrame(dataset)
-        surrogate_label = pd.DataFrame(acc)
-        predictor = self.surrogate(surrogate_label, surrogate_data_df)
 
         # for n in range(int(self.pop_size * train_rate), self.pop_size):
         #     matrix = np.array(population[(n - 1) * self.number_blocks:n * self.number_blocks])
@@ -263,8 +268,6 @@ class GA():
             utils.print_and_log(logger, "-----" + str(generation + 1) + " generation------")
             selected_number = list(range(len(new_population)//3))
             for n in range(len(new_population)//3//2):
-                offspring1 = []
-                offspring2 = []
                 seed = np.random.rand()
                 parents, selected_number = self.selection(selected_number, seed)
                 offspring1, offspring2 = self.crossover(parents[0], parents[1], new_population, nDenseBlocks)
@@ -280,33 +283,50 @@ class GA():
                 idx.append(self.chk(nDenseBlocks, new_population[p]))
 
             do_GAtrain = int(self.pop_size*train_rate)
-            for m in range(self.pop_size, len(new_population)//3):
-                matrix = np.array(new_population[(m - 1) * self.number_blocks:m * self.number_blocks])
-                test_matrix = matrix.ravel().reshape(1, -1)
-                accuracy = predictor.predict(test_matrix)
-                acc.append(accuracy[0])
-            chd_surrogate_acc = acc[self.pop_size:]
-            top4_chd = sorted(list(enumerate(chd_surrogate_acc)), key=lambda x: x[1])
-            top4_chd = [index for index, value in top4_chd[:do_GAtrain]]
-            add_label = []
-            for do in range(do_GAtrain):
-                net = DenseNet(growthRate=arg.growthRate, depth=arg.depth, reduction=arg.reduction,
-                               bottleneck=arg.bottleneck, nClasses=arg.nClasses,
-                               matrix=new_population[((self.pop_size+top4_chd[do]) - 1) * self.number_blocks:(self.pop_size+top4_chd[do]) * self.number_blocks],
-                               idx=idx[((self.pop_size+top4_chd[do]) - 1) * self.number_blocks:(self.pop_size+top4_chd[do]) * self.number_blocks]).to(
-                    device=arg.device)
-                net, loss = GAtrain(net, trainloader, arg.GA_epoch, arg.device)
-                acc[self.pop_size+top4_chd[do]] = loss
-                add_label.append(loss)
+            if arg.surrogate == "True":
+                for m in range(self.pop_size, len(new_population)//3):
+                    matrix = np.array(new_population[(m - 1) * self.number_blocks:m * self.number_blocks])
+                    test_matrix = matrix.ravel().reshape(1, -1)
+                    accuracy = predictor.predict(test_matrix)
+                    acc.append(accuracy[0])
+                chd_surrogate_acc = acc[self.pop_size:]
+                top4_chd = sorted(list(enumerate(chd_surrogate_acc)), key=lambda x: x[1])
+                top4_chd = [index for index, value in top4_chd[:do_GAtrain]]
+                add_label = []
+                for do in range(do_GAtrain):
+                    net = DenseNet(growthRate=arg.growthRate, depth=arg.depth, reduction=arg.reduction,
+                                   bottleneck=arg.bottleneck, nClasses=arg.nClasses,
+                                   matrix=new_population[((self.pop_size+top4_chd[do]) - 1) * self.number_blocks:(self.pop_size+top4_chd[do]) * self.number_blocks],
+                                   idx=idx[((self.pop_size+top4_chd[do]) - 1) * self.number_blocks:(self.pop_size+top4_chd[do]) * self.number_blocks]).to(
+                        device=arg.device)
+                    torch.cuda.empty_cache()
+                    net, loss = GAtrain(net, trainloader, arg.GA_epoch, arg.device)
+                    acc[self.pop_size+top4_chd[do]] = loss
+                    add_label.append(loss)
 
-                matrix = np.array(new_population[((self.pop_size+top4_chd[do]) - 1) * self.number_blocks:(self.pop_size+top4_chd[do]) * self.number_blocks])
-                new_train_matrix = matrix.ravel()
-                dataset.append(new_train_matrix)
+                    matrix = np.array(new_population[((self.pop_size+top4_chd[do]) - 1) * self.number_blocks:(self.pop_size+top4_chd[do]) * self.number_blocks])
+                    new_train_matrix = matrix.ravel()
+                    dataset.append(new_train_matrix)
 
-            surrogate_data_df = pd.DataFrame(dataset)
-            new_label = pd.DataFrame(add_label)
-            surrogate_label = pd.concat([surrogate_label, new_label], axis=0, ignore_index=True)
-            predictor = self.surrogate(surrogate_label, surrogate_data_df)
+                surrogate_data_df = pd.DataFrame(dataset)
+                new_label = pd.DataFrame(add_label)
+                surrogate_label = pd.concat([surrogate_label, new_label], axis=0, ignore_index=True)
+                predictor = self.surrogate(surrogate_label, surrogate_data_df)
+            else:
+                print("daasf")
+                for m in range(self.pop_size, len(new_population)//3):
+                    net = DenseNet(growthRate=arg.growthRate, depth=arg.depth, reduction=arg.reduction,
+                                   bottleneck=arg.bottleneck, nClasses=arg.nClasses,
+                                   matrix=population[(m - 1) * self.number_blocks:m * self.number_blocks],
+                                   idx=idx[(m - 1) * self.number_blocks:m * self.number_blocks]).to(
+                        device=arg.device)
+
+
+                    # print(f"After model to device: {self.to_MB(torch.cuda.memory_allocated()):.2f}MB")
+                    torch.cuda.empty_cache()
+                    net, loss = GAtrain(net, trainloader, arg.GA_epoch, arg.device)
+                    acc.append(loss)
+
 
             utils.print_and_log(logger, "loss = {}".format(acc))
             fitness = acc
@@ -391,3 +411,4 @@ class GA():
                                                                   str(arg.augmentation)))
         utils.print_and_log(logger, "# Params = {}".format(sum(p.numel() for p in net.parameters() if p.requires_grad)))
         utils.print_and_log(logger, "Finish")
+
