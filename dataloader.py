@@ -74,9 +74,6 @@ def GAdataloader():
     elif arg.dataset =='cifar-100':
         normalize = transforms.Normalize(mean=[x / 255.0 for x in [129.3, 124.1, 112.4]],
                                          std=[x / 255.0 for x in [68.2, 65.4, 70.4]])
-    elif arg.dataset =='shvn':
-        normalize = transforms.Normalize(mean=[0.49139968, 0.48215841, 0.44653091],
-                                         std=[0.24703223, 0.24348513, 0.26158784])
     if arg.augmentation == 'True':
         transform = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
