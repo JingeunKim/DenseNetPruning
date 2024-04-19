@@ -85,7 +85,7 @@ def GAdataloader():
             transforms.ToTensor(),
             normalize])
 
-    val_rate = 0.9
+    val_rate = arg.subset
     batch_size = 64
     num_workers = arg.num_workers
     if arg.dataset == 'cifar-10':

@@ -28,7 +28,8 @@ class GA():
         self.number_blocks = 3
 
         utils.print_and_log(logger,
-                            "GA start generation : " + str(self.generations) + " BC = " + str(arg.bottleneck) + " population : " + str(self.pop_size))
+                            "GA start generation : " + str(self.generations) + " BC = " + str(arg.bottleneck) + " population : " +
+                            str(self.pop_size) + " subset = " + str(arg.subset) + " ga epochs = " + str(arg.GA_epoch))
 
     def create_init_pop(self, nb_layers):
         population = []
