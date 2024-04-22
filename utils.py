@@ -25,6 +25,7 @@ parser.add_argument("--augmentation", type=str, default="True", help="augmentati
 parser.add_argument("--surrogate", type=str, default="True", help="surrogate")
 parser.add_argument("--subset", type=float, default=0.9, help="ratio subset of training data")
 parser.add_argument("--dropout", type=float, default=0., help="set 0.2 if you do not data aumentation")
+parser.add_argument("--run", type=int, default=5, help="run")
 arg = parser.parse_args()
 print(arg)
 def setup_logger():

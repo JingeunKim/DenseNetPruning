@@ -208,7 +208,7 @@ class GA():
         surrogate_trainset = pd.concat([df, label], axis=1)
         X, y = surrogate_trainset.iloc[:, :-1], surrogate_trainset.iloc[:, -1]
         predictor = DecisionTreeRegressor()
-        # predictor = GradientBoostingRegressor()
+
         start = time.process_time()
         predictor.fit(X, y)
         utils.print_and_log(logger, "Time taken by surrogate to train the model {}".format(time.process_time() - start))

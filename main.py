@@ -12,7 +12,7 @@ all_run = []
 all_params = []
 all_acc = []
 if not os.path.exists('./best_model'): os.mkdir('./best_model')
-for run in range(5):
+for run in range(arg.run):
     start = time.time()
     utils.print_and_log(logger, "Data augmentation : {}".format(arg.augmentation))
 
