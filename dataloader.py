@@ -68,6 +68,8 @@ def dataloader():
 
 
 def GAdataloader():
+    normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
+                                     std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
     if arg.dataset =='cifar-10':
         normalize = transforms.Normalize(mean=[x / 255.0 for x in [125.3, 123.0, 113.9]],
                                          std=[x / 255.0 for x in [63.0, 62.1, 66.7]])
@@ -88,6 +90,7 @@ def GAdataloader():
     val_rate = arg.subset
     batch_size = 64
     num_workers = arg.num_workers
+
     if arg.dataset == 'cifar-10':
         train_set = torchvision.datasets.CIFAR10(root='./data', train=True,
                                                  download=True, transform=transform)
@@ -99,14 +102,7 @@ def GAdataloader():
 
         train_sampler = SubsetRandomSampler(train_idx)
         valid_sampler = SubsetRandomSampler(valid_idx)
-        trainloader = torch.utils.data.DataLoader(
-            train_set, batch_size=batch_size, sampler=train_sampler,
-            num_workers=num_workers
-        )
-        testloader = torch.utils.data.DataLoader(
-            train_set, batch_size=batch_size, sampler=valid_sampler,
-            num_workers=num_workers
-        )
+
         classes = 10
     elif arg.dataset == 'cifar-100':
         train_set = torchvision.datasets.CIFAR100(root='./data', train=True,
@@ -117,32 +113,14 @@ def GAdataloader():
         train_idx, valid_idx = indices[split_point:], indices[:split_point]
         train_sampler = SubsetRandomSampler(train_idx)
         valid_sampler = SubsetRandomSampler(valid_idx)
-        trainloader = torch.utils.data.DataLoader(
-            train_set, batch_size=batch_size, sampler=train_sampler,
-            num_workers=num_workers
-        )
-        testloader = torch.utils.data.DataLoader(
-            train_set, batch_size=batch_size, sampler=valid_sampler,
-            num_workers=num_workers
-        )
-        classes = 100
-    elif arg.dataset == 'shvn':
-        train_set = torchvision.datasets.SVHN(root='./data', split='train',
-                                                 download=True, transform=transform)
-        len_trainset = len(train_set)
-        indices = list(range(len_trainset))
-        split_point = int(np.floor(len_trainset * val_rate))
-        train_idx, valid_idx = indices[split_point:], indices[:split_point]
 
-        train_sampler = SubsetRandomSampler(train_idx)
-        valid_sampler = SubsetRandomSampler(valid_idx)
-        trainloader = torch.utils.data.DataLoader(
-            train_set, batch_size=batch_size, sampler=train_sampler,
-            num_workers=num_workers
-        )
-        testloader = torch.utils.data.DataLoader(
-            train_set, batch_size=batch_size, sampler=valid_sampler,
-            num_workers=num_workers
-        )
-        classes = 10
+        classes = 100
+    trainloader = torch.utils.data.DataLoader(
+        train_set, batch_size=batch_size, sampler=train_sampler,
+        num_workers=num_workers
+    )
+    testloader = torch.utils.data.DataLoader(
+        train_set, batch_size=batch_size, sampler=valid_sampler,
+        num_workers=num_workers
+    )
     return trainloader, testloader, classes
