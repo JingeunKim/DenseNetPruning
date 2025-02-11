@@ -158,7 +158,6 @@ class DenseNet(nn.Module):
         nDenseBlocks = (depth - 4) // 3
         if bottleneck:
             nDenseBlocks //= 2
-
         self.nChannels = 2 * growthRate
         self.conv1 = nn.Conv2d(3, self.nChannels, kernel_size=3, padding=1,
                                bias=False)
@@ -180,7 +179,6 @@ class DenseNet(nn.Module):
 
         self.bn1 = nn.BatchNorm2d(self.nChannels)
         self.fc = nn.Linear(self.nChannels, nClasses)
-
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels

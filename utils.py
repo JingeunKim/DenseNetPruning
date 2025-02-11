@@ -3,14 +3,21 @@ import logging
 import datetime
 
 parser = argparse.ArgumentParser(description="parameter of SMA-GA")
-parser.add_argument("--device", type=str, default="cuda", help="type of gpu")
-parser.add_argument("--dataset", type=str, default="cifar-10", help="cifar-10 or cifar-100")
+parser.add_argument("--run", type=int, default=5, help="run")
 parser.add_argument("--GA_epoch", type=int, default=10, help="number of epochs in GA")
 parser.add_argument("--crossover_rate", type=float, default=1, help="probability of crossover")
 parser.add_argument("--mutation_rate", type=float, default=0.05, help="probability of mutation")
 parser.add_argument("--generation", type=int, default=60, help="number of generation")
 parser.add_argument("--number_population", type=int, default=40, help="number_population")
 parser.add_argument("--elitism", type=float, default=0.2, help="elitism rate")
+parser.add_argument("--subset", type=float, default=0.9, help="ratio subset of training data")
+parser.add_argument("--surrogate", type=str, default="True", help="surrogate")
+parser.add_argument("--number_crossover", type=int, default=3, help="number_crossover")
+parser.add_argument("--number_mutation", type=int, default=3, help="number_mutation")
+parser.add_argument("--mode", type=str, default="ga", help="ga or rs?")
+
+parser.add_argument("--device", type=str, default="cuda", help="type of gpu")
+parser.add_argument("--dataset", type=str, default="cifar-10", help="cifar-10 or cifar-100")
 parser.add_argument("--num_workers", type=int, default=4, help="num_workers")
 parser.add_argument("--lr", type=float, default=1e-1, help="learning rate")
 parser.add_argument("--weight_decay", type=float, default=1e-4, help="weight_decay")
@@ -22,10 +29,9 @@ parser.add_argument("--reduction", type=float, default=0.5, help="reduction")
 parser.add_argument("--bottleneck", type=bool, default=True, help="bottleneck")
 parser.add_argument("--nClasses", type=int, default=10, help="number of classes")
 parser.add_argument("--augmentation", type=str, default="True", help="augmentation")
-parser.add_argument("--surrogate", type=str, default="True", help="surrogate")
-parser.add_argument("--subset", type=float, default=0.9, help="ratio subset of training data")
-parser.add_argument("--dropout", type=float, default=0., help="set 0.2 if you do not data aumentation")
-parser.add_argument("--run", type=int, default=5, help="run")
+parser.add_argument("--dropout", type=float, default=0., help="set 0.2 if you do not data augmentation")
+
+
 arg = parser.parse_args()
 print(arg)
 def setup_logger():
