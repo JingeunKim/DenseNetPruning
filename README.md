@@ -23,7 +23,15 @@ python main.py\
 
 
 ## Citation
-If you find this useful, please cite the following paper:
-```
-TBA
-```
+If you find this work useful, please cite:
+
+```bibtex
+@article{kim2025pruning,
+  title={Pruning for efficient DenseNet via surrogate-model-assisted genetic algorithm considering neural architecture search proxies},
+  author={Kim, Jingeun and Yoon, Yourim},
+  journal={Swarm and Evolutionary Computation},
+  volume={97},
+  pages={101983},
+  year={2025},
+  publisher={Elsevier}
+}
